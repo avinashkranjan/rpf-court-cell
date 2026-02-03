@@ -69,7 +69,7 @@ export default function LoginPage() {
         </div>
 
         <span className="text-sm text-blue-600 cursor-pointer">
-          General Diary
+          Railway Protection Act
         </span>
       </header>
 
