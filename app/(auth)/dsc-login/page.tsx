@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RefreshCcw, User, Lock } from "lucide-react";
 
-export default function LoginPage() {
+export default function DscLoginPage() {
   const router = useRouter();
   const generateCaptcha = () =>
     // eslint-disable-next-line react-hooks/purity
@@ -16,6 +16,10 @@ export default function LoginPage() {
 
   const [captcha, setCaptcha] = useState(generateCaptcha());
   const [captchaInput, setCaptchaInput] = useState("");
+
+  const handleDemoLogin = () => {
+    router.push("/dashboard");
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f8fafc]">
@@ -38,13 +42,13 @@ export default function LoginPage() {
             <div className="flex flex-col items-center gap-3 mb-6">
               <Image src="/rpf-logo.png" alt="RPF" width={70} height={70} />
               <h2 className="text-red-600 font-semibold text-lg">
-                RPF Court Cell Login
+                Sr.DSC/DSC Login
               </h2>
             </div>
 
             <div className="relative mb-4">
               <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input className="pl-9" placeholder="User ID" />
+              <Input className="pl-9" placeholder="DSC User ID" />
             </div>
 
             <div className="relative mb-4">
@@ -79,18 +83,20 @@ export default function LoginPage() {
               </Button>
             </div>
 
-            <Button className="w-full bg-blue-600 hover:bg-blue-700">
-              Login
+            <Button 
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              onClick={handleDemoLogin}
+            >
+              Demo Login
             </Button>
 
             <p className="text-center text-sm mt-4">
-              Login as
               <Button
                 variant="ghost"
-                className="ml-1 text-blue-600 cursor-pointer px-1"
-                onClick={() => router.push("/dsc-login")}
+                className="text-blue-600 cursor-pointer px-1"
+                onClick={() => router.push("/login")}
               >
-                Sr.DSC/DSC Login
+                Back to RPF Court Cell Login
               </Button>
             </p>
           </CardContent>
