@@ -12,11 +12,10 @@ export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsAuthenticated(false);
-      setIsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
+    const storedAuth = localStorage.getItem("rpf_auth");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsAuthenticated(Boolean(storedAuth));
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
