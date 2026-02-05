@@ -58,7 +58,43 @@ The RPF (Railway Protection Force) Court Cell Digitization System is a comprehen
 - **Real-time Validation**: Highlights incomplete mandatory items
 - **PDF Generation**: Placeholder for official document
 
-### 6. Dashboard & Navigation ✅
+### 6. Personal Search Memo ✅
+- **Date/Time and Location**: Complete search details
+- **Dynamic Items Table**: Add/remove items found
+- **Nil Search Checkbox**: For searches with no findings
+- **Witness Tracking**: Multiple witnesses support
+- **Auto-Population**: Accused details pre-filled
+- **PDF Generation**: Placeholder for official document
+
+### 7. Medical/Inspection Memo ✅
+- **Auto-Pull Accused Details**: From accused profile
+- **Arrest Reference**: Auto-populated from arrest memo
+- **Injury Documentation**: Complete medical examination details
+- **Doctor/Institution Details**: Medical professional information
+- **Certificate Upload**: Medical certificate attachment
+- **Doctor Signature**: Digital signature placeholder
+- **PDF Generation**: Placeholder for official document
+
+### 8. Court Forwarding/Complaint-cum-PR Report ✅
+- **Auto-Generated Narrative**: Complete prosecution narrative from all case data
+- **Data Aggregation**: Pulls from all modules (case, accused, memos)
+- **Prosecution Summary**: Brief summary for court
+- **Attached Documents**: Lists all memos and checklists
+- **Regenerate Function**: Update narrative after changes
+- **Officer Signature**: Digital signature placeholder
+- **PDF Generation**: Placeholder with RPF letterhead
+
+### 9. Accused Challan Generator ✅
+- **Multi-Select Accused**: Choose accused for challan
+- **Complete Case Info**: All case details included
+- **Sections of Law**: All applicable sections listed
+- **Categorized Enclosures**: Color-coded document list
+- **Escort Officer Details**: Officer assignment tracking
+- **QR Code Generation**: For verification and authenticity
+- **Auto-Generated Challan Number**: Unique identifier
+- **PDF Generation**: Master challan document
+
+### 10. Dashboard & Navigation ✅
 - **Statistics Cards**:
   - Total cases count
   - Accused profiles count
