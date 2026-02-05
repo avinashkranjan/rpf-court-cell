@@ -301,7 +301,7 @@ export default function PersonalSearchMemoPage({ params }: { params: { id: strin
                     <label className="flex items-start gap-3 cursor-pointer">
                       <Checkbox
                         checked={formData.isNilSearch}
-                        onChange={(e) => handleNilSearchChange(e.target.checked)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNilSearchChange(e.target.checked)}
                       />
                       <div>
                         <p className="font-semibold text-sm">Nil Search</p>
