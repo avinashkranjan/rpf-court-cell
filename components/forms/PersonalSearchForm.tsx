@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/integrations/supabase/client';
-import { useAuth } from '@/lib/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import SignaturePad from '@/components/SignaturePad';
-import OfficerCombobox from '@/components/ui/OfficerCombobox';
-import { Loader2, Save, FileDown, Plus, Trash2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { generatePersonalSearchPDF } from '@/lib/pdfGenerator';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/auth-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import SignaturePad from "@/components/SignaturePad";
+import OfficerCombobox from "@/components/ui/OfficerCombobox";
+import { Loader2, Save, FileDown, Plus, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { generatePersonalSearchPDF } from "@/lib/pdfGenerator";
 
 interface PersonalSearchFormProps {
   caseId: string;
@@ -40,22 +41,22 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
   const [existingMemo, setExistingMemo] = useState<any>(null);
 
   const [formData, setFormData] = useState({
-    search_date: new Date().toISOString().split('T')[0],
+    search_date: new Date().toISOString().split("T")[0],
     search_time: new Date().toTimeString().slice(0, 5),
-    search_place: caseData.incident_location || '',
+    search_place: caseData.incident_location || "",
     is_nil_search: false,
-    cash_found: '0',
-    articles_found: '',
-    witness1_name: '',
-    witness1_address: '',
-    witness1_signature: '',
-    witness2_name: '',
-    witness2_address: '',
-    witness2_signature: '',
-    searching_officer_name: profile?.full_name || '',
-    searching_officer_designation: profile?.designation || '',
-    searching_officer_signature: '',
-    accused_signature: '',
+    cash_found: "0",
+    articles_found: "",
+    witness1_name: "",
+    witness1_address: "",
+    witness1_signature: "",
+    witness2_name: "",
+    witness2_address: "",
+    witness2_signature: "",
+    searching_officer_name: profile?.full_name || "",
+    searching_officer_designation: profile?.designation || "",
+    searching_officer_signature: "",
+    accused_signature: "",
   });
 
   const [searchItems, setSearchItems] = useState<SearchItem[]>([]);
@@ -63,10 +64,10 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
   useEffect(() => {
     const fetchExisting = async () => {
       const { data } = await supabase
-        .from('personal_search_memos')
-        .select('*')
-        .eq('case_id', caseId)
-        .eq('accused_id', accusedId)
+        .from("personal_search_memos")
+        .select("*")
+        .eq("case_id", caseId)
+        .eq("accused_id", accusedId)
         .single();
 
       if (data) {
@@ -76,34 +77,34 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
           search_time: data.search_time,
           search_place: data.search_place,
           is_nil_search: data.is_nil_search || false,
-          cash_found: data.cash_found?.toString() || '0',
-          articles_found: data.articles_found || '',
+          cash_found: data.cash_found?.toString() || "0",
+          articles_found: data.articles_found || "",
           witness1_name: data.witness1_name,
           witness1_address: data.witness1_address,
-          witness1_signature: data.witness1_signature || '',
+          witness1_signature: data.witness1_signature || "",
           witness2_name: data.witness2_name,
           witness2_address: data.witness2_address,
-          witness2_signature: data.witness2_signature || '',
+          witness2_signature: data.witness2_signature || "",
           searching_officer_name: data.searching_officer_name,
           searching_officer_designation: data.searching_officer_designation,
-          searching_officer_signature: data.searching_officer_signature || '',
-          accused_signature: data.accused_signature || '',
+          searching_officer_signature: data.searching_officer_signature || "",
+          accused_signature: data.accused_signature || "",
         });
 
         // Fetch search items
         const { data: items } = await supabase
-          .from('personal_search_items')
-          .select('*')
-          .eq('search_memo_id', data.id);
+          .from("personal_search_items")
+          .select("*")
+          .eq("search_memo_id", data.id);
 
         if (items && items.length > 0) {
           setSearchItems(
             items.map((item) => ({
               item_name: item.item_name,
               quantity: item.quantity,
-              description: item.description || '',
-              remarks: item.remarks || '',
-            }))
+              description: item.description || "",
+              remarks: item.remarks || "",
+            })),
           );
         }
       }
@@ -115,14 +116,21 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleItemChange = (index: number, field: keyof SearchItem, value: string | number) => {
+  const handleItemChange = (
+    index: number,
+    field: keyof SearchItem,
+    value: string | number,
+  ) => {
     const updated = [...searchItems];
     (updated[index] as any)[field] = value;
     setSearchItems(updated);
   };
 
   const addItem = () => {
-    setSearchItems([...searchItems, { item_name: '', quantity: 1, description: '', remarks: '' }]);
+    setSearchItems([
+      ...searchItems,
+      { item_name: "", quantity: 1, description: "", remarks: "" },
+    ]);
   };
 
   const removeItem = (index: number) => {
@@ -151,7 +159,8 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
         witness2_signature: formData.witness2_signature || null,
         searching_officer_name: formData.searching_officer_name,
         searching_officer_designation: formData.searching_officer_designation,
-        searching_officer_signature: formData.searching_officer_signature || null,
+        searching_officer_signature:
+          formData.searching_officer_signature || null,
         accused_signature: formData.accused_signature || null,
         is_completed: complete,
       };
@@ -160,17 +169,20 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
 
       if (existingMemo) {
         const { error } = await supabase
-          .from('personal_search_memos')
+          .from("personal_search_memos")
           .update(memoData)
-          .eq('id', existingMemo.id);
+          .eq("id", existingMemo.id);
 
         if (error) throw error;
         memoId = existingMemo.id;
 
-        await supabase.from('personal_search_items').delete().eq('search_memo_id', memoId);
+        await supabase
+          .from("personal_search_items")
+          .delete()
+          .eq("search_memo_id", memoId);
       } else {
         const { data, error } = await supabase
-          .from('personal_search_memos')
+          .from("personal_search_memos")
           .insert(memoData)
           .select()
           .single();
@@ -192,25 +204,31 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
           }));
 
         if (itemsToInsert.length > 0) {
-          const { error: itemError } = await supabase.from('personal_search_items').insert(itemsToInsert);
+          const { error: itemError } = await supabase
+            .from("personal_search_items")
+            .insert(itemsToInsert);
           if (itemError) throw itemError;
         }
       }
 
       toast({
-        title: complete ? 'Personal Search Memo Completed' : 'Personal Search Memo Saved',
-        description: complete ? 'Proceeding to next step...' : 'Draft saved successfully',
+        title: complete
+          ? "Personal Search Memo Completed"
+          : "Personal Search Memo Saved",
+        description: complete
+          ? "Proceeding to next step..."
+          : "Draft saved successfully",
       });
 
       if (complete) {
         onComplete();
       }
     } catch (error: any) {
-      console.error('Error saving personal search memo:', error);
+      console.error("Error saving personal search memo:", error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to save personal search memo',
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Failed to save personal search memo",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -231,7 +249,7 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
             id="search_date"
             type="date"
             value={formData.search_date}
-            onChange={(e) => handleChange('search_date', e.target.value)}
+            onChange={(e) => handleChange("search_date", e.target.value)}
             required
           />
         </div>
@@ -241,7 +259,7 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
             id="search_time"
             type="time"
             value={formData.search_time}
-            onChange={(e) => handleChange('search_time', e.target.value)}
+            onChange={(e) => handleChange("search_time", e.target.value)}
             required
           />
         </div>
@@ -250,7 +268,7 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
           <Input
             id="search_place"
             value={formData.search_place}
-            onChange={(e) => handleChange('search_place', e.target.value)}
+            onChange={(e) => handleChange("search_place", e.target.value)}
             required
           />
         </div>
@@ -261,7 +279,9 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
         <Checkbox
           id="is_nil_search"
           checked={formData.is_nil_search}
-          onCheckedChange={(checked) => handleChange('is_nil_search', checked as boolean)}
+          onCheckedChange={(checked) =>
+            handleChange("is_nil_search", checked as boolean)
+          }
         />
         <Label htmlFor="is_nil_search">Nil Search (Nothing found)</Label>
       </div>
@@ -276,7 +296,7 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
                 id="cash_found"
                 type="number"
                 value={formData.cash_found}
-                onChange={(e) => handleChange('cash_found', e.target.value)}
+                onChange={(e) => handleChange("cash_found", e.target.value)}
                 min="0"
               />
             </div>
@@ -285,18 +305,28 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-base font-semibold">Articles Found</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addItem}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addItem}
+              >
                 <Plus className="h-4 w-4 mr-1" />
                 Add Item
               </Button>
             </div>
             {searchItems.map((item, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-2 p-4 border rounded-lg">
+              <div
+                key={index}
+                className="grid grid-cols-1 md:grid-cols-5 gap-2 p-4 border rounded-lg"
+              >
                 <div className="md:col-span-2 space-y-2">
                   <Label>Item Name</Label>
                   <Input
                     value={item.item_name}
-                    onChange={(e) => handleItemChange(index, 'item_name', e.target.value)}
+                    onChange={(e) =>
+                      handleItemChange(index, "item_name", e.target.value)
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -304,7 +334,13 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
                   <Input
                     type="number"
                     value={item.quantity}
-                    onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 1)}
+                    onChange={(e) =>
+                      handleItemChange(
+                        index,
+                        "quantity",
+                        parseInt(e.target.value) || 1,
+                      )
+                    }
                     min="1"
                   />
                 </div>
@@ -312,7 +348,9 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
                   <Label>Remarks</Label>
                   <Input
                     value={item.remarks}
-                    onChange={(e) => handleItemChange(index, 'remarks', e.target.value)}
+                    onChange={(e) =>
+                      handleItemChange(index, "remarks", e.target.value)
+                    }
                   />
                 </div>
                 <div className="flex items-end">
@@ -330,11 +368,13 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="articles_found">Additional Articles Description</Label>
+            <Label htmlFor="articles_found">
+              Additional Articles Description
+            </Label>
             <Textarea
               id="articles_found"
               value={formData.articles_found}
-              onChange={(e) => handleChange('articles_found', e.target.value)}
+              onChange={(e) => handleChange("articles_found", e.target.value)}
               placeholder="Describe any other articles found..."
               rows={3}
             />
@@ -350,7 +390,7 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
             <Label>Name *</Label>
             <Input
               value={formData.witness1_name}
-              onChange={(e) => handleChange('witness1_name', e.target.value)}
+              onChange={(e) => handleChange("witness1_name", e.target.value)}
               required
             />
           </div>
@@ -358,7 +398,7 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
             <Label>Address *</Label>
             <Input
               value={formData.witness1_address}
-              onChange={(e) => handleChange('witness1_address', e.target.value)}
+              onChange={(e) => handleChange("witness1_address", e.target.value)}
               required
             />
           </div>
@@ -366,7 +406,7 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
         <SignaturePad
           label="Witness 1 Signature"
           value={formData.witness1_signature}
-          onChange={(sig) => handleChange('witness1_signature', sig)}
+          onChange={(sig) => handleChange("witness1_signature", sig)}
         />
       </div>
 
@@ -378,7 +418,7 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
             <Label>Name *</Label>
             <Input
               value={formData.witness2_name}
-              onChange={(e) => handleChange('witness2_name', e.target.value)}
+              onChange={(e) => handleChange("witness2_name", e.target.value)}
               required
             />
           </div>
@@ -386,7 +426,7 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
             <Label>Address *</Label>
             <Input
               value={formData.witness2_address}
-              onChange={(e) => handleChange('witness2_address', e.target.value)}
+              onChange={(e) => handleChange("witness2_address", e.target.value)}
               required
             />
           </div>
@@ -394,7 +434,7 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
         <SignaturePad
           label="Witness 2 Signature"
           value={formData.witness2_signature}
-          onChange={(sig) => handleChange('witness2_signature', sig)}
+          onChange={(sig) => handleChange("witness2_signature", sig)}
         />
       </div>
 
@@ -422,7 +462,9 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
             <Label>Name *</Label>
             <Input
               value={formData.searching_officer_name}
-              onChange={(e) => handleChange('searching_officer_name', e.target.value)}
+              onChange={(e) =>
+                handleChange("searching_officer_name", e.target.value)
+              }
               required
             />
           </div>
@@ -430,7 +472,9 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
             <Label>Designation *</Label>
             <Input
               value={formData.searching_officer_designation}
-              onChange={(e) => handleChange('searching_officer_designation', e.target.value)}
+              onChange={(e) =>
+                handleChange("searching_officer_designation", e.target.value)
+              }
               required
             />
           </div>
@@ -438,18 +482,20 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
         <SignaturePad
           label="Officer Signature"
           value={formData.searching_officer_signature}
-          onChange={(sig) => handleChange('searching_officer_signature', sig)}
+          onChange={(sig) => handleChange("searching_officer_signature", sig)}
           required
         />
       </div>
 
       {/* Accused Signature */}
       <div className="space-y-4 p-4 border rounded-lg">
-        <Label className="text-base font-semibold">Accused Acknowledgment</Label>
+        <Label className="text-base font-semibold">
+          Accused Acknowledgment
+        </Label>
         <SignaturePad
           label="Accused Signature"
           value={formData.accused_signature}
-          onChange={(sig) => handleChange('accused_signature', sig)}
+          onChange={(sig) => handleChange("accused_signature", sig)}
           required
         />
       </div>
@@ -467,7 +513,11 @@ const PersonalSearchForm: React.FC<PersonalSearchFormProps> = ({
           <Save className="h-4 w-4 mr-2" />
           Save Draft
         </Button>
-        <Button type="button" onClick={(e) => handleSubmit(e, true)} disabled={loading}>
+        <Button
+          type="button"
+          onClick={(e) => handleSubmit(e, true)}
+          disabled={loading}
+        >
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Complete & Next
         </Button>

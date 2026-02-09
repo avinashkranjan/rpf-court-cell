@@ -14,8 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAuth } from "@/lib/contexts/AuthContext";
-import { useToast } from "@/lib/hooks/use-toast";
+import { useAuth } from "@/context/auth-context";
+import { useToast } from "@/hooks/use-toast";
 
 const designations = [
   "Constable",

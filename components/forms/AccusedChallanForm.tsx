@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, FileDown, CheckCircle, AlertCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { generateAccusedChallanPDF } from '@/lib/pdfGenerator';
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, FileDown, CheckCircle, AlertCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { generateAccusedChallanPDF } from "@/lib/pdfGenerator";
 
 interface AccusedChallanFormProps {
   caseId: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   caseData: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   accusedList: any[];
   onComplete: () => void;
 }
@@ -26,22 +26,25 @@ const AccusedChallanForm: React.FC<AccusedChallanFormProps> = ({
 }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [existingChallan, setExistingChallan] = useState<any>(null);
-  const [accusedStatus, setAccusedStatus] = useState<Record<string, boolean>>({});
+  const [accusedStatus, setAccusedStatus] = useState<Record<string, boolean>>(
+    {},
+  );
 
   const [formData, setFormData] = useState({
-    challan_date: new Date().toISOString().split('T')[0],
-    court_name: caseData.court_name || 'Ld. RJM/HOWRAH',
-    escorting_officers: '',
+    challan_date: new Date().toISOString().split("T")[0],
+    court_name: caseData.court_name || "Ld. RJM/HOWRAH",
+    escorting_officers: "",
   });
 
   useEffect(() => {
     const fetchData = async () => {
       // Fetch existing challan
       const { data: challan } = await supabase
-        .from('accused_challans')
-        .select('*')
-        .eq('case_id', caseId)
+        .from("accused_challans")
+        .select("*")
+        .eq("case_id", caseId)
         .single();
 
       if (challan) {
@@ -49,21 +52,46 @@ const AccusedChallanForm: React.FC<AccusedChallanFormProps> = ({
         setFormData({
           challan_date: challan.challan_date,
           court_name: challan.court_name,
-          escorting_officers: challan.escorting_officers || '',
+          escorting_officers: challan.escorting_officers || "",
         });
       }
 
       // Check completion status for each accused
       const status: Record<string, boolean> = {};
       for (const accused of accusedList) {
-        const [seizure, arrest, search, medical, checklist, forwarding] = await Promise.all([
-          supabase.from('seizure_memos').select('is_completed').eq('accused_id', accused.id).single(),
-          supabase.from('arrest_memos').select('is_completed').eq('accused_id', accused.id).single(),
-          supabase.from('personal_search_memos').select('is_completed').eq('accused_id', accused.id).single(),
-          supabase.from('medical_memos').select('is_completed').eq('accused_id', accused.id).single(),
-          supabase.from('bnss_checklists').select('is_completed').eq('accused_id', accused.id).single(),
-          supabase.from('court_forwardings').select('is_completed').eq('accused_id', accused.id).single(),
-        ]);
+        const [seizure, arrest, search, medical, checklist, forwarding] =
+          await Promise.all([
+            supabase
+              .from("seizure_memos")
+              .select("is_completed")
+              .eq("accused_id", accused.id)
+              .single(),
+            supabase
+              .from("arrest_memos")
+              .select("is_completed")
+              .eq("accused_id", accused.id)
+              .single(),
+            supabase
+              .from("personal_search_memos")
+              .select("is_completed")
+              .eq("accused_id", accused.id)
+              .single(),
+            supabase
+              .from("medical_memos")
+              .select("is_completed")
+              .eq("accused_id", accused.id)
+              .single(),
+            supabase
+              .from("bnss_checklists")
+              .select("is_completed")
+              .eq("accused_id", accused.id)
+              .single(),
+            supabase
+              .from("court_forwardings")
+              .select("is_completed")
+              .eq("accused_id", accused.id)
+              .single(),
+          ]);
 
         status[accused.id] = Boolean(
           seizure.data?.is_completed &&
@@ -71,7 +99,7 @@ const AccusedChallanForm: React.FC<AccusedChallanFormProps> = ({
           search.data?.is_completed &&
           medical.data?.is_completed &&
           checklist.data?.is_completed &&
-          forwarding.data?.is_completed
+          forwarding.data?.is_completed,
         );
       }
       setAccusedStatus(status);
@@ -90,9 +118,10 @@ const AccusedChallanForm: React.FC<AccusedChallanFormProps> = ({
 
     if (complete && !allAccusedComplete) {
       toast({
-        title: 'Cannot Complete Challan',
-        description: 'All accused must have all 6 steps completed before generating challan',
-        variant: 'destructive',
+        title: "Cannot Complete Challan",
+        description:
+          "All accused must have all 6 steps completed before generating challan",
+        variant: "destructive",
       });
       return;
     }
@@ -101,11 +130,11 @@ const AccusedChallanForm: React.FC<AccusedChallanFormProps> = ({
 
     try {
       const enclosures = [
-        { name: 'Court Forwarding', count: accusedList.length },
-        { name: 'Arrest-cum-Insp. Memo', count: accusedList.length },
-        { name: 'Personal Search', count: accusedList.length },
-        { name: 'BNSS Check List', count: accusedList.length },
-        { name: 'Medical Memo', count: accusedList.length },
+        { name: "Court Forwarding", count: accusedList.length },
+        { name: "Arrest-cum-Insp. Memo", count: accusedList.length },
+        { name: "Personal Search", count: accusedList.length },
+        { name: "BNSS Check List", count: accusedList.length },
+        { name: "Medical Memo", count: accusedList.length },
       ];
 
       const challanData = {
@@ -119,13 +148,13 @@ const AccusedChallanForm: React.FC<AccusedChallanFormProps> = ({
 
       if (existingChallan) {
         const { error } = await supabase
-          .from('accused_challans')
+          .from("accused_challans")
           .update(challanData)
-          .eq('id', existingChallan.id);
+          .eq("id", existingChallan.id);
         if (error) throw error;
       } else {
         const { data, error } = await supabase
-          .from('accused_challans')
+          .from("accused_challans")
           .insert(challanData)
           .select()
           .single();
@@ -139,29 +168,37 @@ const AccusedChallanForm: React.FC<AccusedChallanFormProps> = ({
           sl_number: index + 1,
         }));
 
-        const { error: linkError } = await supabase.from('challan_accused').insert(challanAccused);
+        const { error: linkError } = await supabase
+          .from("challan_accused")
+          .insert(challanAccused);
         if (linkError) throw linkError;
       }
 
       // Update case status
       if (complete) {
-        await supabase.from('cases').update({ status: 'approved' }).eq('id', caseId);
+        await supabase
+          .from("cases")
+          .update({ status: "approved" })
+          .eq("id", caseId);
       }
 
       toast({
-        title: complete ? 'Challan Generated Successfully!' : 'Challan Saved',
-        description: complete ? 'All documents are ready for court submission' : 'Draft saved successfully',
+        title: complete ? "Challan Generated Successfully!" : "Challan Saved",
+        description: complete
+          ? "All documents are ready for court submission"
+          : "Draft saved successfully",
       });
 
       if (complete) {
         onComplete();
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error('Error saving challan:', error);
+      console.error("Error saving challan:", error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to save challan',
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Failed to save challan",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -176,10 +213,14 @@ const AccusedChallanForm: React.FC<AccusedChallanFormProps> = ({
     <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-6">
       {/* Header */}
       <div className="p-4 bg-muted rounded-lg text-center">
-        <p className="text-sm font-semibold">IN THE COURT OF {formData.court_name}</p>
+        <p className="text-sm font-semibold">
+          IN THE COURT OF {formData.court_name}
+        </p>
         <p className="text-lg font-bold mt-2">ACCUSED CHALLAN</p>
         <p className="text-sm">{caseData.post_name}</p>
-        <p className="text-sm">DATED-: {new Date(formData.challan_date).toLocaleDateString()}</p>
+        <p className="text-sm">
+          DATED-: {new Date(formData.challan_date).toLocaleDateString()}
+        </p>
       </div>
 
       {/* Completion Status */}
@@ -190,7 +231,8 @@ const AccusedChallanForm: React.FC<AccusedChallanFormProps> = ({
             <p className="font-medium">Incomplete Documentation</p>
           </div>
           <p className="text-sm mt-1 text-muted-foreground">
-            Some accused persons have incomplete documentation. Complete all 6 steps for each accused before generating the final challan.
+            Some accused persons have incomplete documentation. Complete all 6
+            steps for each accused before generating the final challan.
           </p>
         </div>
       )}
@@ -199,31 +241,51 @@ const AccusedChallanForm: React.FC<AccusedChallanFormProps> = ({
       <div className="space-y-4">
         <Label className="text-base font-semibold">Accused Persons</Label>
         {accusedList.map((accused, index) => (
-          <Card key={accused.id} className={accusedStatus[accused.id] ? 'border-[hsl(var(--success))]' : 'border-destructive'}>
+          <Card
+            key={accused.id}
+            className={
+              accusedStatus[accused.id]
+                ? "border-[hsl(var(--success))]"
+                : "border-destructive"
+            }
+          >
             <CardHeader className="py-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <span className="font-bold">#{index + 1}</span>
                   {accused.full_name}
                 </CardTitle>
-                <Badge variant={accusedStatus[accused.id] ? 'default' : 'destructive'} className={accusedStatus[accused.id] ? 'bg-[hsl(var(--success))]' : ''}>
+                <Badge
+                  variant={
+                    accusedStatus[accused.id] ? "default" : "destructive"
+                  }
+                  className={
+                    accusedStatus[accused.id] ? "bg-[hsl(var(--success))]" : ""
+                  }
+                >
                   {accusedStatus[accused.id] ? (
                     <>
                       <CheckCircle className="h-3 w-3 mr-1" />
                       Complete
                     </>
                   ) : (
-                    'Incomplete'
+                    "Incomplete"
                   )}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="py-2 text-sm">
               <p className="text-muted-foreground">
-                {accused.gender}-{accused.age} Yrs, S/O- {accused.father_name} of {accused.address_line1}, Dist- {accused.district}, {accused.state}
+                {accused.gender}-{accused.age} Yrs, S/O- {accused.father_name}{" "}
+                of {accused.address_line1}, Dist- {accused.district},{" "}
+                {accused.state}
               </p>
-              <p className="mt-1"><strong>Section:</strong> {caseData.section_of_law} Railway Act</p>
-              <p className="mt-1"><strong>Mobile:</strong> {accused.mobile_number || 'N/A'}</p>
+              <p className="mt-1">
+                <strong>Section:</strong> {caseData.section_of_law} Railway Act
+              </p>
+              <p className="mt-1">
+                <strong>Mobile:</strong> {accused.mobile_number || "N/A"}
+              </p>
             </CardContent>
           </Card>
         ))}
@@ -231,7 +293,9 @@ const AccusedChallanForm: React.FC<AccusedChallanFormProps> = ({
 
       {/* Enclosures */}
       <div className="p-4 border rounded-lg">
-        <Label className="text-base font-semibold">Enclosures (per accused)</Label>
+        <Label className="text-base font-semibold">
+          Enclosures (per accused)
+        </Label>
         <ul className="mt-2 text-sm list-disc list-inside space-y-1">
           <li>Court Forwarding - 01</li>
           <li>Arrest-cum-Inspection Memo - 01</li>
@@ -247,7 +311,7 @@ const AccusedChallanForm: React.FC<AccusedChallanFormProps> = ({
         <Textarea
           id="escorting_officers"
           value={formData.escorting_officers}
-          onChange={(e) => handleChange('escorting_officers', e.target.value)}
+          onChange={(e) => handleChange("escorting_officers", e.target.value)}
           placeholder="e.g., SI/ Shyam Das, HC/ B K Singh, HC/ Pintu Bera"
           rows={3}
         />

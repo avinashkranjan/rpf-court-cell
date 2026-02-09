@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/integrations/supabase/client';
-import { useAuth } from '@/lib/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import SignaturePad from '@/components/SignaturePad';
-import OfficerCombobox from '@/components/ui/OfficerCombobox';
-import { Loader2, Plus, Trash2, Save, FileDown } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { generateSeizureMemoPDF } from '@/lib/pdfGenerator';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/auth-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import SignaturePad from "@/components/SignaturePad";
+import OfficerCombobox from "@/components/ui/OfficerCombobox";
+import { Loader2, Plus, Trash2, Save, FileDown } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { generateSeizureMemoPDF } from "@/lib/pdfGenerator";
 
 interface SeizureMemoFormProps {
   caseId: string;
@@ -40,31 +40,31 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
   const [existingMemo, setExistingMemo] = useState<any>(null);
 
   const [formData, setFormData] = useState({
-    seizure_date: new Date().toISOString().split('T')[0],
+    seizure_date: new Date().toISOString().split("T")[0],
     seizure_time: new Date().toTimeString().slice(0, 5),
-    seizure_place: caseData.incident_location || '',
-    witness1_name: '',
-    witness1_address: '',
-    witness1_signature: '',
-    witness2_name: '',
-    witness2_address: '',
-    witness2_signature: '',
-    seizing_officer_name: profile?.full_name || '',
-    seizing_officer_designation: profile?.designation || '',
-    seizing_officer_signature: '',
+    seizure_place: caseData.incident_location || "",
+    witness1_name: "",
+    witness1_address: "",
+    witness1_signature: "",
+    witness2_name: "",
+    witness2_address: "",
+    witness2_signature: "",
+    seizing_officer_name: profile?.full_name || "",
+    seizing_officer_designation: profile?.designation || "",
+    seizing_officer_signature: "",
   });
 
   const [seizedItems, setSeizedItems] = useState<SeizedItem[]>([
-    { item_name: '', quantity: 1, unit: 'nos', description: '', remarks: '' },
+    { item_name: "", quantity: 1, unit: "nos", description: "", remarks: "" },
   ]);
 
   useEffect(() => {
     const fetchExisting = async () => {
       const { data } = await supabase
-        .from('seizure_memos')
-        .select('*')
-        .eq('case_id', caseId)
-        .eq('accused_id', accusedId)
+        .from("seizure_memos")
+        .select("*")
+        .eq("case_id", caseId)
+        .eq("accused_id", accusedId)
         .single();
 
       if (data) {
@@ -75,30 +75,30 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
           seizure_place: data.seizure_place,
           witness1_name: data.witness1_name,
           witness1_address: data.witness1_address,
-          witness1_signature: data.witness1_signature || '',
+          witness1_signature: data.witness1_signature || "",
           witness2_name: data.witness2_name,
           witness2_address: data.witness2_address,
-          witness2_signature: data.witness2_signature || '',
+          witness2_signature: data.witness2_signature || "",
           seizing_officer_name: data.seizing_officer_name,
           seizing_officer_designation: data.seizing_officer_designation,
-          seizing_officer_signature: data.seizing_officer_signature || '',
+          seizing_officer_signature: data.seizing_officer_signature || "",
         });
 
         // Fetch seized items
         const { data: items } = await supabase
-          .from('seized_items')
-          .select('*')
-          .eq('seizure_memo_id', data.id);
+          .from("seized_items")
+          .select("*")
+          .eq("seizure_memo_id", data.id);
 
         if (items && items.length > 0) {
           setSeizedItems(
             items.map((item) => ({
               item_name: item.item_name,
               quantity: item.quantity,
-              unit: item.unit || 'nos',
-              description: item.description || '',
-              remarks: item.remarks || '',
-            }))
+              unit: item.unit || "nos",
+              description: item.description || "",
+              remarks: item.remarks || "",
+            })),
           );
         }
       }
@@ -110,7 +110,11 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleItemChange = (index: number, field: keyof SeizedItem, value: string | number) => {
+  const handleItemChange = (
+    index: number,
+    field: keyof SeizedItem,
+    value: string | number,
+  ) => {
     const updated = [...seizedItems];
     (updated[index] as any)[field] = value;
     setSeizedItems(updated);
@@ -119,7 +123,7 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
   const addItem = () => {
     setSeizedItems([
       ...seizedItems,
-      { item_name: '', quantity: 1, unit: 'nos', description: '', remarks: '' },
+      { item_name: "", quantity: 1, unit: "nos", description: "", remarks: "" },
     ]);
   };
 
@@ -156,18 +160,21 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
 
       if (existingMemo) {
         const { error } = await supabase
-          .from('seizure_memos')
+          .from("seizure_memos")
           .update(memoData)
-          .eq('id', existingMemo.id);
+          .eq("id", existingMemo.id);
 
         if (error) throw error;
         memoId = existingMemo.id;
 
         // Delete old items and insert new ones
-        await supabase.from('seized_items').delete().eq('seizure_memo_id', memoId);
+        await supabase
+          .from("seized_items")
+          .delete()
+          .eq("seizure_memo_id", memoId);
       } else {
         const { data, error } = await supabase
-          .from('seizure_memos')
+          .from("seizure_memos")
           .insert(memoData)
           .select()
           .single();
@@ -189,27 +196,34 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
         }));
 
       if (itemsToInsert.length > 0) {
-        const { error: itemError } = await supabase.from('seized_items').insert(itemsToInsert);
+        const { error: itemError } = await supabase
+          .from("seized_items")
+          .insert(itemsToInsert);
         if (itemError) throw itemError;
       }
 
       // Update case status if first memo
-      await supabase.from('cases').update({ status: 'in_progress' }).eq('id', caseId);
+      await supabase
+        .from("cases")
+        .update({ status: "in_progress" })
+        .eq("id", caseId);
 
       toast({
-        title: complete ? 'Seizure Memo Completed' : 'Seizure Memo Saved',
-        description: complete ? 'Proceeding to next step...' : 'Draft saved successfully',
+        title: complete ? "Seizure Memo Completed" : "Seizure Memo Saved",
+        description: complete
+          ? "Proceeding to next step..."
+          : "Draft saved successfully",
       });
 
       if (complete) {
         onComplete();
       }
     } catch (error: any) {
-      console.error('Error saving seizure memo:', error);
+      console.error("Error saving seizure memo:", error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to save seizure memo',
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Failed to save seizure memo",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -235,7 +249,7 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
             id="seizure_date"
             type="date"
             value={formData.seizure_date}
-            onChange={(e) => handleChange('seizure_date', e.target.value)}
+            onChange={(e) => handleChange("seizure_date", e.target.value)}
             required
           />
         </div>
@@ -245,7 +259,7 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
             id="seizure_time"
             type="time"
             value={formData.seizure_time}
-            onChange={(e) => handleChange('seizure_time', e.target.value)}
+            onChange={(e) => handleChange("seizure_time", e.target.value)}
             required
           />
         </div>
@@ -254,7 +268,7 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
           <Input
             id="seizure_place"
             value={formData.seizure_place}
-            onChange={(e) => handleChange('seizure_place', e.target.value)}
+            onChange={(e) => handleChange("seizure_place", e.target.value)}
             placeholder="Location of seizure"
             required
           />
@@ -271,12 +285,17 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
           </Button>
         </div>
         {seizedItems.map((item, index) => (
-          <div key={index} className="grid grid-cols-1 md:grid-cols-6 gap-2 p-4 border rounded-lg">
+          <div
+            key={index}
+            className="grid grid-cols-1 md:grid-cols-6 gap-2 p-4 border rounded-lg"
+          >
             <div className="md:col-span-2 space-y-2">
               <Label>Item Name *</Label>
               <Input
                 value={item.item_name}
-                onChange={(e) => handleItemChange(index, 'item_name', e.target.value)}
+                onChange={(e) =>
+                  handleItemChange(index, "item_name", e.target.value)
+                }
                 placeholder="Article name"
               />
             </div>
@@ -285,7 +304,13 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
               <Input
                 type="number"
                 value={item.quantity}
-                onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 1)}
+                onChange={(e) =>
+                  handleItemChange(
+                    index,
+                    "quantity",
+                    parseInt(e.target.value) || 1,
+                  )
+                }
                 min="1"
               />
             </div>
@@ -293,7 +318,9 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
               <Label>Unit</Label>
               <Input
                 value={item.unit}
-                onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
+                onChange={(e) =>
+                  handleItemChange(index, "unit", e.target.value)
+                }
                 placeholder="nos/kg/etc"
               />
             </div>
@@ -301,7 +328,9 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
               <Label>Remarks</Label>
               <Input
                 value={item.remarks}
-                onChange={(e) => handleItemChange(index, 'remarks', e.target.value)}
+                onChange={(e) =>
+                  handleItemChange(index, "remarks", e.target.value)
+                }
                 placeholder="Any remarks"
               />
             </div>
@@ -329,7 +358,7 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
             <Label>Name *</Label>
             <Input
               value={formData.witness1_name}
-              onChange={(e) => handleChange('witness1_name', e.target.value)}
+              onChange={(e) => handleChange("witness1_name", e.target.value)}
               placeholder="Witness name"
               required
             />
@@ -338,7 +367,7 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
             <Label>Address *</Label>
             <Input
               value={formData.witness1_address}
-              onChange={(e) => handleChange('witness1_address', e.target.value)}
+              onChange={(e) => handleChange("witness1_address", e.target.value)}
               placeholder="Witness address"
               required
             />
@@ -347,7 +376,7 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
         <SignaturePad
           label="Witness 1 Signature"
           value={formData.witness1_signature}
-          onChange={(sig) => handleChange('witness1_signature', sig)}
+          onChange={(sig) => handleChange("witness1_signature", sig)}
         />
       </div>
 
@@ -359,7 +388,7 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
             <Label>Name *</Label>
             <Input
               value={formData.witness2_name}
-              onChange={(e) => handleChange('witness2_name', e.target.value)}
+              onChange={(e) => handleChange("witness2_name", e.target.value)}
               placeholder="Witness name"
               required
             />
@@ -368,7 +397,7 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
             <Label>Address *</Label>
             <Input
               value={formData.witness2_address}
-              onChange={(e) => handleChange('witness2_address', e.target.value)}
+              onChange={(e) => handleChange("witness2_address", e.target.value)}
               placeholder="Witness address"
               required
             />
@@ -377,7 +406,7 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
         <SignaturePad
           label="Witness 2 Signature"
           value={formData.witness2_signature}
-          onChange={(sig) => handleChange('witness2_signature', sig)}
+          onChange={(sig) => handleChange("witness2_signature", sig)}
         />
       </div>
 
@@ -405,7 +434,9 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
             <Label>Name *</Label>
             <Input
               value={formData.seizing_officer_name}
-              onChange={(e) => handleChange('seizing_officer_name', e.target.value)}
+              onChange={(e) =>
+                handleChange("seizing_officer_name", e.target.value)
+              }
               required
             />
           </div>
@@ -413,7 +444,9 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
             <Label>Designation *</Label>
             <Input
               value={formData.seizing_officer_designation}
-              onChange={(e) => handleChange('seizing_officer_designation', e.target.value)}
+              onChange={(e) =>
+                handleChange("seizing_officer_designation", e.target.value)
+              }
               required
             />
           </div>
@@ -421,7 +454,7 @@ const SeizureMemoForm: React.FC<SeizureMemoFormProps> = ({
         <SignaturePad
           label="Officer Signature"
           value={formData.seizing_officer_signature}
-          onChange={(sig) => handleChange('seizing_officer_signature', sig)}
+          onChange={(sig) => handleChange("seizing_officer_signature", sig)}
           required
         />
       </div>

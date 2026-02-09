@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Check, ChevronsUpDown, User } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from "react";
+import { Check, ChevronsUpDown, User } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -9,13 +9,13 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
+} from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { supabase } from '@/lib/integrations/supabase/client';
+} from "@/components/ui/popover";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Officer {
   id: string;
@@ -35,7 +35,7 @@ interface OfficerComboboxProps {
 const OfficerCombobox: React.FC<OfficerComboboxProps> = ({
   value,
   onChange,
-  placeholder = 'Select officer...',
+  placeholder = "Select officer...",
   disabled = false,
 }) => {
   const [open, setOpen] = useState(false);
@@ -46,9 +46,9 @@ const OfficerCombobox: React.FC<OfficerComboboxProps> = ({
     const fetchOfficers = async () => {
       setLoading(true);
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, designation, belt_number, post_name')
-        .order('full_name');
+        .from("profiles")
+        .select("id, full_name, designation, belt_number, post_name")
+        .order("full_name");
 
       if (!error && data) {
         setOfficers(data);
@@ -75,7 +75,8 @@ const OfficerCombobox: React.FC<OfficerComboboxProps> = ({
               <User className="h-4 w-4 shrink-0" />
               <span className="truncate">
                 {selectedOfficer.designation}/{selectedOfficer.full_name}
-                {selectedOfficer.belt_number && ` (${selectedOfficer.belt_number})`}
+                {selectedOfficer.belt_number &&
+                  ` (${selectedOfficer.belt_number})`}
               </span>
             </span>
           ) : (
@@ -89,22 +90,25 @@ const OfficerCombobox: React.FC<OfficerComboboxProps> = ({
           <CommandInput placeholder="Search officers by name, designation, belt..." />
           <CommandList>
             <CommandEmpty>
-              {loading ? 'Loading officers...' : 'No officer found.'}
+              {loading ? "Loading officers..." : "No officer found."}
             </CommandEmpty>
             <CommandGroup>
               {officers.map((officer) => (
                 <CommandItem
                   key={officer.id}
-                  value={`${officer.full_name} ${officer.designation} ${officer.belt_number || ''} ${officer.post_name}`}
+                  value={`${officer.full_name} ${officer.designation} ${officer.belt_number || ""} ${officer.post_name}`}
                   onSelect={() => {
-                    onChange(officer.id === value ? '' : officer.id, officer.id === value ? null : officer);
+                    onChange(
+                      officer.id === value ? "" : officer.id,
+                      officer.id === value ? null : officer,
+                    );
                     setOpen(false);
                   }}
                 >
                   <Check
                     className={cn(
-                      'mr-2 h-4 w-4',
-                      value === officer.id ? 'opacity-100' : 'opacity-0'
+                      "mr-2 h-4 w-4",
+                      value === officer.id ? "opacity-100" : "opacity-0",
                     )}
                   />
                   <div className="flex flex-col">

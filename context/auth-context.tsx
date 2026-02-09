@@ -1,8 +1,6 @@
-"use client";
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/lib/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Profile {
   id: string;
@@ -101,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email,
       password,
       options: {
-        emailRedirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
+        emailRedirectTo: window.location.origin,
       },
     });
 

@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/integrations/supabase/client';
-import { useAuth } from '@/lib/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import SignaturePad from '@/components/SignaturePad';
-import OfficerCombobox from '@/components/ui/OfficerCombobox';
-import { Loader2, Save, FileDown, AlertTriangle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { generateBNSSChecklistPDF } from '@/lib/pdfGenerator';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/auth-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import SignaturePad from "@/components/SignaturePad";
+import OfficerCombobox from "@/components/ui/OfficerCombobox";
+import { Loader2, Save, FileDown, AlertTriangle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { generateBNSSChecklistPDF } from "@/lib/pdfGenerator";
 
 interface BNSSChecklistFormProps {
   caseId: string;
@@ -37,54 +38,61 @@ const BNSSChecklistForm: React.FC<BNSSChecklistFormProps> = ({
     ground_c_evidence_protection: false,
     ground_d_prevent_inducement: false,
     ground_e_ensure_court_presence: false,
-    officer_name: profile?.full_name || '',
-    officer_designation: profile?.designation || '',
-    officer_signature: '',
+    officer_name: profile?.full_name || "",
+    officer_designation: profile?.designation || "",
+    officer_signature: "",
   });
 
   const grounds = [
     {
-      key: 'ground_a_prevent_offence',
-      label: '(a) To prevent such person from committing any further offence',
+      key: "ground_a_prevent_offence",
+      label: "(a) To prevent such person from committing any further offence",
     },
     {
-      key: 'ground_b_proper_investigation',
-      label: '(b) For proper investigation of the offence',
+      key: "ground_b_proper_investigation",
+      label: "(b) For proper investigation of the offence",
     },
     {
-      key: 'ground_c_evidence_protection',
-      label: '(c) To prevent such person from causing the evidence of the offence to disappear or tampering with such evidence in any manner',
+      key: "ground_c_evidence_protection",
+      label:
+        "(c) To prevent such person from causing the evidence of the offence to disappear or tampering with such evidence in any manner",
     },
     {
-      key: 'ground_d_prevent_inducement',
-      label: '(d) To prevent such person from making any inducement, threat or promise to any person acquainted with the facts of the case so as to dissuade him from disclosing such facts to the Court or to the police officer',
+      key: "ground_d_prevent_inducement",
+      label:
+        "(d) To prevent such person from making any inducement, threat or promise to any person acquainted with the facts of the case so as to dissuade him from disclosing such facts to the Court or to the police officer",
     },
     {
-      key: 'ground_e_ensure_court_presence',
-      label: '(e) As unless such person is arrested, his presence in the Court whenever required cannot be ensured',
+      key: "ground_e_ensure_court_presence",
+      label:
+        "(e) As unless such person is arrested, his presence in the Court whenever required cannot be ensured",
     },
   ];
 
   useEffect(() => {
     const fetchExisting = async () => {
       const { data } = await supabase
-        .from('bnss_checklists')
-        .select('*')
-        .eq('case_id', caseId)
-        .eq('accused_id', accusedId)
+        .from("bnss_checklists")
+        .select("*")
+        .eq("case_id", caseId)
+        .eq("accused_id", accusedId)
         .single();
 
       if (data) {
         setExistingChecklist(data);
         setFormData({
           ground_a_prevent_offence: data.ground_a_prevent_offence || false,
-          ground_b_proper_investigation: data.ground_b_proper_investigation || false,
-          ground_c_evidence_protection: data.ground_c_evidence_protection || false,
-          ground_d_prevent_inducement: data.ground_d_prevent_inducement || false,
-          ground_e_ensure_court_presence: data.ground_e_ensure_court_presence || false,
+          ground_b_proper_investigation:
+            data.ground_b_proper_investigation || false,
+          ground_c_evidence_protection:
+            data.ground_c_evidence_protection || false,
+          ground_d_prevent_inducement:
+            data.ground_d_prevent_inducement || false,
+          ground_e_ensure_court_presence:
+            data.ground_e_ensure_court_presence || false,
           officer_name: data.officer_name,
           officer_designation: data.officer_designation,
-          officer_signature: data.officer_signature || '',
+          officer_signature: data.officer_signature || "",
         });
       }
     };
@@ -95,7 +103,7 @@ const BNSSChecklistForm: React.FC<BNSSChecklistFormProps> = ({
     setFormData({ ...formData, [field]: value });
   };
 
-  const atLeastOneSelected = 
+  const atLeastOneSelected =
     formData.ground_a_prevent_offence ||
     formData.ground_b_proper_investigation ||
     formData.ground_c_evidence_protection ||
@@ -107,9 +115,9 @@ const BNSSChecklistForm: React.FC<BNSSChecklistFormProps> = ({
 
     if (complete && !atLeastOneSelected) {
       toast({
-        title: 'Validation Error',
-        description: 'At least one ground of arrest must be selected',
-        variant: 'destructive',
+        title: "Validation Error",
+        description: "At least one ground of arrest must be selected",
+        variant: "destructive",
       });
       return;
     }
@@ -133,29 +141,33 @@ const BNSSChecklistForm: React.FC<BNSSChecklistFormProps> = ({
 
       if (existingChecklist) {
         const { error } = await supabase
-          .from('bnss_checklists')
+          .from("bnss_checklists")
           .update(checklistData)
-          .eq('id', existingChecklist.id);
+          .eq("id", existingChecklist.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('bnss_checklists').insert(checklistData);
+        const { error } = await supabase
+          .from("bnss_checklists")
+          .insert(checklistData);
         if (error) throw error;
       }
 
       toast({
-        title: complete ? 'BNSS Checklist Completed' : 'BNSS Checklist Saved',
-        description: complete ? 'Proceeding to next step...' : 'Draft saved successfully',
+        title: complete ? "BNSS Checklist Completed" : "BNSS Checklist Saved",
+        description: complete
+          ? "Proceeding to next step..."
+          : "Draft saved successfully",
       });
 
       if (complete) {
         onComplete();
       }
     } catch (error: any) {
-      console.error('Error saving BNSS checklist:', error);
+      console.error("Error saving BNSS checklist:", error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to save checklist',
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Failed to save checklist",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -171,13 +183,21 @@ const BNSSChecklistForm: React.FC<BNSSChecklistFormProps> = ({
       {/* Header Info */}
       <div className="p-4 bg-muted rounded-lg">
         <p className="text-sm">
-          This notice is issued to inform the arrested person about the grounds of arrest in compliance with <strong>Section 35 of BNSS</strong>.
+          This notice is issued to inform the arrested person about the grounds
+          of arrest in compliance with <strong>Section 35 of BNSS</strong>.
         </p>
         <p className="text-sm mt-2">
-          <strong>Case Reference:</strong> {caseData.case_number}, Dtd-{new Date(caseData.case_date).toLocaleDateString()} U/S-{caseData.section_of_law} of the Railway Act, 1989
+          <strong>Case Reference:</strong> {caseData.case_number}, Dtd-
+          {new Date(caseData.case_date).toLocaleDateString()} U/S-
+          {caseData.section_of_law} of the Railway Act, 1989
         </p>
         <p className="text-sm mt-2">
-          <strong>Name and address of the accused:</strong> {accused.full_name}, Mob No- {accused.mobile_number || 'N/A'}, {accused.gender}-{accused.age} Yrs, S/O- {accused.father_name} of {accused.address_line1}, P.O- {accused.post_office || 'N/A'}, P.S- {accused.police_station || 'N/A'}, Dist- {accused.district}, {accused.state}-{accused.pincode || 'N/A'}
+          <strong>Name and address of the accused:</strong> {accused.full_name},
+          Mob No- {accused.mobile_number || "N/A"}, {accused.gender}-
+          {accused.age} Yrs, S/O- {accused.father_name} of{" "}
+          {accused.address_line1}, P.O- {accused.post_office || "N/A"}, P.S-{" "}
+          {accused.police_station || "N/A"}, Dist- {accused.district},{" "}
+          {accused.state}-{accused.pincode || "N/A"}
         </p>
       </div>
 
@@ -201,8 +221,12 @@ const BNSSChecklistForm: React.FC<BNSSChecklistFormProps> = ({
             <div key={ground.key} className="flex items-start space-x-3">
               <Checkbox
                 id={ground.key}
-                checked={formData[ground.key as keyof typeof formData] as boolean}
-                onCheckedChange={(checked) => handleChange(ground.key, checked as boolean)}
+                checked={
+                  formData[ground.key as keyof typeof formData] as boolean
+                }
+                onCheckedChange={(checked) =>
+                  handleChange(ground.key, checked as boolean)
+                }
               />
               <Label
                 htmlFor={ground.key}
@@ -239,7 +263,7 @@ const BNSSChecklistForm: React.FC<BNSSChecklistFormProps> = ({
             <Label>Name</Label>
             <Input
               value={formData.officer_name}
-              onChange={(e) => handleChange('officer_name', e.target.value)}
+              onChange={(e) => handleChange("officer_name", e.target.value)}
               readOnly
             />
           </div>
@@ -247,18 +271,18 @@ const BNSSChecklistForm: React.FC<BNSSChecklistFormProps> = ({
             <Label>Designation</Label>
             <Input
               value={formData.officer_designation}
-              onChange={(e) => handleChange('officer_designation', e.target.value)}
+              onChange={(e) =>
+                handleChange("officer_designation", e.target.value)
+              }
               readOnly
             />
           </div>
         </div>
-        <p className="text-sm text-muted-foreground">
-          {caseData.post_name}
-        </p>
+        <p className="text-sm text-muted-foreground">{caseData.post_name}</p>
         <SignaturePad
           label="Officer Signature"
           value={formData.officer_signature}
-          onChange={(sig) => handleChange('officer_signature', sig)}
+          onChange={(sig) => handleChange("officer_signature", sig)}
           required
         />
       </div>

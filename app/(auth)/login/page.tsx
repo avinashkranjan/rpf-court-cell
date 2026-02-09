@@ -7,13 +7,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RefreshCcw, User, Lock } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
   const generateCaptcha = () =>
-    // eslint-disable-next-line react-hooks/purity
     Math.random().toString(36).substring(2, 7).toUpperCase();
 
+  const { signIn } = useAuth();
   const [captcha, setCaptcha] = useState(generateCaptcha());
   const [captchaInput, setCaptchaInput] = useState("");
   const [userId, setUserId] = useState("");
@@ -22,10 +24,13 @@ export default function LoginPage() {
     userId?: string;
     password?: string;
     captcha?: string;
+    loginError?: string;
   }>({});
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     const nextErrors: typeof errors = {};
+    setErrors({});
 
     if (!userId.trim()) {
       nextErrors.userId = "User ID is required";
@@ -41,21 +46,43 @@ export default function LoginPage() {
       nextErrors.captcha = "Captcha does not match";
     }
 
-    setErrors(nextErrors);
-
     if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
       return;
     }
 
-    localStorage.setItem(
-      "rpf_auth",
-      JSON.stringify({
-        role: "user",
-        userId,
-        loginAt: new Date().toISOString(),
-      }),
-    );
-    router.push("/dashboard");
+    try {
+      setLoading(true);
+
+      const { error } = await signIn(userId.trim(), password);
+
+      if (error) {
+        toast.error("Login Failed", {
+          description: error.message ?? "Invalid credentials",
+        });
+        setErrors({ loginError: error.message ?? "Invalid credentials" });
+        return;
+      }
+
+      toast.success("Login Successful", {
+        description: "Welcome back!",
+      });
+
+      router.push("/dashboard");
+    } catch (err) {
+      setErrors({
+        loginError:
+          err instanceof Error ? err.message : "An unexpected error occurred",
+      });
+      toast.error("Unexpected Error", {
+        description:
+          err instanceof Error ? err.message : "Something went wrong",
+      });
+    } finally {
+      setCaptcha(generateCaptcha());
+      setCaptchaInput("");
+      setLoading(false);
+    }
   };
 
   return (
@@ -140,11 +167,16 @@ export default function LoginPage() {
               <p className="text-xs text-red-600 mb-3">{errors.captcha}</p>
             )}
 
+            {errors.loginError && (
+              <p className="text-xs text-red-600 mb-3">{errors.loginError}</p>
+            )}
+
             <Button
               className="w-full bg-blue-600 hover:bg-blue-700"
               onClick={handleLogin}
+              disabled={loading}
             >
-              Login
+              {loading ? "Logging in..." : "Login"}
             </Button>
 
             <p className="text-center text-sm mt-4">
