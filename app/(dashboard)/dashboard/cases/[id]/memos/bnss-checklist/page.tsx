@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Save, FileDown, AlertCircle } from "lucide-react";
 import { useCaseStore } from "@/lib/store/case-store";
@@ -230,16 +230,19 @@ export default function BNSSChecklistPage({ params }: { params: { id: string } }
                 <div>
                   <Label htmlFor="accusedId">Select Accused *</Label>
                   <Select
-                    id="accusedId"
                     value={formData.accusedId}
-                    onChange={(e) => setFormData({ ...formData, accusedId: e.target.value })}
+                    onValueChange={(value) => setFormData({ ...formData, accusedId: value })}
                   >
-                    <option value="">Select Accused</option>
-                    {accusedList.map((accused) => (
-                      <option key={accused.id} value={accused.id}>
-                        {accused.name} (Age: {accused.age}, {accused.district})
-                      </option>
-                    ))}
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Accused" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accusedList.map((accused) => (
+                        <SelectItem key={accused.id} value={accused.id}>
+                          {accused.name} (Age: {accused.age}, {accused.district})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
                   {errors.accusedId && (
                     <p className="text-sm text-red-600 mt-1">{errors.accusedId}</p>
@@ -353,8 +356,8 @@ export default function BNSSChecklistPage({ params }: { params: { id: string } }
                       <label className="flex items-start gap-3 cursor-pointer">
                         <Checkbox
                           checked={checkedItems[ground.id] || false}
-                          onChange={(e) =>
-                            handleCheckboxChange(ground.id, e.target.checked)
+                          onCheckedChange={(checked) =>
+                            handleCheckboxChange(ground.id, checked === true)
                           }
                           className="mt-1"
                         />

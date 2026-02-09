@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -65,13 +65,14 @@ const AccusedChallanForm: React.FC<AccusedChallanFormProps> = ({
           supabase.from('court_forwardings').select('is_completed').eq('accused_id', accused.id).single(),
         ]);
 
-        status[accused.id] = 
+        status[accused.id] = Boolean(
           seizure.data?.is_completed &&
           arrest.data?.is_completed &&
           search.data?.is_completed &&
           medical.data?.is_completed &&
           checklist.data?.is_completed &&
-          forwarding.data?.is_completed;
+          forwarding.data?.is_completed
+        );
       }
       setAccusedStatus(status);
     };

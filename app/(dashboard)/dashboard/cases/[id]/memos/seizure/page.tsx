@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Save, Plus, Trash2, Camera, FileDown } from "lucide-react";
 import { useCaseStore } from "@/lib/store/case-store";
@@ -174,18 +174,21 @@ export default function SeizureMemoPage({ params }: { params: { id: string } }) 
                   <div>
                     <Label htmlFor="accusedId">Select Accused *</Label>
                     <Select
-                      id="accusedId"
                       value={formData.accusedId}
-                      onChange={(e) =>
-                        setFormData({ ...formData, accusedId: e.target.value })
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, accusedId: value })
                       }
                     >
-                      <option value="">Select Accused</option>
-                      {accusedList.map((accused) => (
-                        <option key={accused.id} value={accused.id}>
-                          {accused.name} (Age: {accused.age}, {accused.district})
-                        </option>
-                      ))}
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Accused" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {accusedList.map((accused) => (
+                          <SelectItem key={accused.id} value={accused.id}>
+                            {accused.name} (Age: {accused.age}, {accused.district})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
                     {errors.accusedId && (
                       <p className="text-sm text-red-600 mt-1">{errors.accusedId}</p>
@@ -344,16 +347,21 @@ export default function SeizureMemoPage({ params }: { params: { id: string } }) 
                             <Label>Unit</Label>
                             <Select
                               value={item.unit}
-                              onChange={(e) => updateItem(index, "unit", e.target.value)}
+                              onValueChange={(value) => updateItem(index, "unit", value)}
                             >
-                              <option value="nos">Nos</option>
-                              <option value="kg">Kg</option>
-                              <option value="grams">Grams</option>
-                              <option value="liters">Liters</option>
-                              <option value="pieces">Pieces</option>
-                              <option value="packets">Packets</option>
-                              <option value="bottles">Bottles</option>
-                              <option value="other">Other</option>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="nos">Nos</SelectItem>
+                                <SelectItem value="kg">Kg</SelectItem>
+                                <SelectItem value="grams">Grams</SelectItem>
+                                <SelectItem value="liters">Liters</SelectItem>
+                                <SelectItem value="pieces">Pieces</SelectItem>
+                                <SelectItem value="packets">Packets</SelectItem>
+                                <SelectItem value="bottles">Bottles</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                              </SelectContent>
                             </Select>
                           </div>
                         </div>

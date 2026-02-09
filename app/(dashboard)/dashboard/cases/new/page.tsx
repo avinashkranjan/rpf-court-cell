@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Save } from "lucide-react";
 import { useCaseStore } from "@/lib/store/case-store";
@@ -111,18 +111,21 @@ export default function NewCasePage() {
                 <div>
                   <Label htmlFor="railwayZone">Railway Zone *</Label>
                   <Select
-                    id="railwayZone"
                     value={formData.railwayZone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, railwayZone: e.target.value })
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, railwayZone: value })
                     }
                   >
-                    <option value="">Select Zone</option>
-                    {RAILWAY_ZONES.map((zone) => (
-                      <option key={zone} value={zone}>
-                        {zone}
-                      </option>
-                    ))}
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Zone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {RAILWAY_ZONES.map((zone) => (
+                        <SelectItem key={zone} value={zone}>
+                          {zone}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
                   {errors.railwayZone && (
                     <p className="text-sm text-red-600 mt-1">{errors.railwayZone}</p>
