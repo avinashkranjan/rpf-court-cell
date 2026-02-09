@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Google_Sans } from "next/font/google";
 import "./globals.css";
+import { Providers } from "./providers";
 
 const google_sans = Google_Sans({
   subsets: ["latin"],
@@ -23,7 +24,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${google_sans.className} antialiased`}>{children}</body>
+      <body className={`${google_sans.className} antialiased`}>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
