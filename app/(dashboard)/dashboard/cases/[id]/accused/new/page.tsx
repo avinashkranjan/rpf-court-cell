@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Save, Camera, AlertCircle } from "lucide-react";
 import { useAccusedStore } from "@/lib/store/accused-store";
@@ -222,15 +222,19 @@ export default function AddAccusedPage({ params }: { params: { id: string } }) {
                   <div>
                     <Label htmlFor="gender">Gender *</Label>
                     <Select
-                      id="gender"
                       value={formData.gender}
-                      onChange={(e) =>
-                        setFormData({ ...formData, gender: e.target.value as typeof formData.gender })
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, gender: value as typeof formData.gender })
                       }
                     >
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
                     </Select>
                   </div>
                 </div>
@@ -272,16 +276,19 @@ export default function AddAccusedPage({ params }: { params: { id: string } }) {
                   <div>
                     <Label htmlFor="state">State *</Label>
                     <Select
-                      id="state"
                       value={formData.state}
-                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                      onValueChange={(value) => setFormData({ ...formData, state: value })}
                     >
-                      <option value="">Select State</option>
-                      {STATES.map((state) => (
-                        <option key={state} value={state}>
-                          {state}
-                        </option>
-                      ))}
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select State" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STATES.map((state) => (
+                          <SelectItem key={state} value={state}>
+                            {state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
                     {errors.state && (
                       <p className="text-sm text-red-600 mt-1">{errors.state}</p>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Save, FileDown, Upload } from "lucide-react";
 import { useCaseStore } from "@/lib/store/case-store";
@@ -155,16 +155,19 @@ export default function MedicalInspectionMemoPage({ params }: { params: { id: st
                   <div>
                     <Label htmlFor="accusedId">Select Accused *</Label>
                     <Select
-                      id="accusedId"
                       value={formData.accusedId}
-                      onChange={(e) => handleAccusedChange(e.target.value)}
+                      onValueChange={(value) => handleAccusedChange(value)}
                     >
-                      <option value="">Select Accused</option>
-                      {accusedList.map((accused) => (
-                        <option key={accused.id} value={accused.id}>
-                          {accused.name} (Age: {accused.age}, {accused.district})
-                        </option>
-                      ))}
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Accused" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {accusedList.map((accused) => (
+                          <SelectItem key={accused.id} value={accused.id}>
+                            {accused.name} (Age: {accused.age}, {accused.district})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
                     {errors.accusedId && (
                       <p className="text-sm text-red-600 mt-1">{errors.accusedId}</p>
