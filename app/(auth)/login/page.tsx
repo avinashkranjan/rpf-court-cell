@@ -74,7 +74,7 @@ export default function LoginPage() {
       </header>
 
       <main className="flex-1 flex items-center justify-center">
-        <Card className="w-[380px] border-yellow-400">
+        <Card className="w-96 border-yellow-400">
           <CardContent className="p-6">
             <div className="flex flex-col items-center gap-3 mb-6">
               <Image src="/rpf-logo.png" alt="RPF" width={70} height={70} />

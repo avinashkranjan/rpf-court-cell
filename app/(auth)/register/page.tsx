@@ -7,7 +7,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useToast } from "@/lib/hooks/use-toast";
 
@@ -40,7 +46,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Password Mismatch",
@@ -86,7 +92,9 @@ export default function RegisterPage() {
     } catch (err) {
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description:
+          "An unexpected error occurred. Please try again." +
+          (err instanceof Error ? err.message : ""),
         variant: "destructive",
       });
     } finally {
@@ -124,6 +132,7 @@ export default function RegisterPage() {
                   <Label htmlFor="full_name">Full Name *</Label>
                   <Input
                     id="full_name"
+                    placeholder="Enter your full name"
                     value={formData.full_name}
                     onChange={(e) =>
                       setFormData({ ...formData, full_name: e.target.value })
@@ -157,6 +166,7 @@ export default function RegisterPage() {
                   <Label htmlFor="belt_number">Belt Number</Label>
                   <Input
                     id="belt_number"
+                    placeholder="e.g., RPF-12345"
                     value={formData.belt_number}
                     onChange={(e) =>
                       setFormData({ ...formData, belt_number: e.target.value })
@@ -169,6 +179,7 @@ export default function RegisterPage() {
                   <Input
                     id="phone"
                     type="tel"
+                    placeholder="e.g., 9876543210"
                     value={formData.phone}
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
@@ -180,6 +191,7 @@ export default function RegisterPage() {
                   <Label htmlFor="post_name">Post Name *</Label>
                   <Input
                     id="post_name"
+                    placeholder="e.g., RPF Post Howrah"
                     value={formData.post_name}
                     onChange={(e) =>
                       setFormData({ ...formData, post_name: e.target.value })
@@ -192,6 +204,7 @@ export default function RegisterPage() {
                   <Label htmlFor="railway_zone">Railway Zone *</Label>
                   <Input
                     id="railway_zone"
+                    placeholder="e.g., Eastern Railway"
                     value={formData.railway_zone}
                     onChange={(e) =>
                       setFormData({ ...formData, railway_zone: e.target.value })
@@ -205,6 +218,7 @@ export default function RegisterPage() {
                   <Input
                     id="email"
                     type="email"
+                    placeholder="officer.name@rpf.gov.in"
                     value={formData.email}
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
@@ -218,6 +232,7 @@ export default function RegisterPage() {
                   <Input
                     id="password"
                     type="password"
+                    placeholder="At least 6 characters"
                     value={formData.password}
                     onChange={(e) =>
                       setFormData({ ...formData, password: e.target.value })
@@ -231,6 +246,7 @@ export default function RegisterPage() {
                   <Input
                     id="confirmPassword"
                     type="password"
+                    placeholder="Re-enter your password"
                     value={formData.confirmPassword}
                     onChange={(e) =>
                       setFormData({
