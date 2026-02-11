@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
+import { ProtectedRoute } from "@/components/auth/protected-route";
 import Image from "next/image";
 
 interface AppLayoutProps {
@@ -64,6 +65,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   ];
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen bg-gray-50">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
@@ -209,6 +211,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         </main>
       </div>
     </div>
+    </ProtectedRoute>
   );
 };
 
