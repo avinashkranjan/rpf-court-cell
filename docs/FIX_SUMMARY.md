@@ -37,17 +37,48 @@ Created comprehensive documentation:
 
 ## How to Apply the Fix
 
-### Quick Steps
-1. Open [Supabase Dashboard](https://app.supabase.com) → SQL Editor
-2. Copy contents of `supabase/migrations/20260211_fix_profiles_rls.sql`
-3. Paste and click "Run"
-4. Verify 4 policies created in Table Editor → profiles → Policies
+### ⚠️ Important: Check for Duplicate Policies First
 
-### Verification
+If you've already applied the migration but still see the error, you likely have duplicate or conflicting policies.
+
+**Check your policies:**
+```sql
+SELECT policyname, cmd, qual, with_check, roles 
+FROM pg_policies 
+WHERE tablename = 'profiles';
+```
+
+**If you see duplicates or policies with "Applies to: public":**
+
+### Step 1: Clean Up (Required if migration was already run)
+
+1. Open Supabase Dashboard → SQL Editor
+2. Copy and paste contents of `supabase/migrations/cleanup_profiles_policies.sql`
+3. Click "Run" to remove all duplicate policies
+4. Verify cleanup:
+   ```sql
+   SELECT policyname FROM pg_policies WHERE tablename = 'profiles';
+   ```
+   Should return 0 rows after cleanup.
+
+### Step 2: Apply Updated Migration
+
+1. **Open Supabase Dashboard** at https://app.supabase.com
+2. Navigate to **SQL Editor** → **New Query**
+3. Copy contents of `supabase/migrations/20260211_fix_profiles_rls.sql`
+4. Paste and click **"Run"**
+5. Wait for success message
+
+### Step 3: Verify
+
 ```sql
 SELECT policyname, cmd FROM pg_policies WHERE tablename = 'profiles';
 ```
-Should return 4 policies.
+Should return exactly 4 policies:
+- Enable insert for authenticated users (INSERT)
+- Enable read for own profile (SELECT)
+- Enable read for all authenticated users (SELECT)
+- Enable update for own profile (UPDATE)
 
 ### Test Registration
 1. Go to `/register` page

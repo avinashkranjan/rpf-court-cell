@@ -8,11 +8,39 @@ Error creating profile:
 {code: '42501', details: null, hint: null, message: 'new row violates row-level security policy for table "profiles"'}
 ```
 
-**Cause:** The `profiles` table has Row-Level Security (RLS) enabled but no policies defined to allow users to insert their profile during registration.
+**Cause:** The `profiles` table has Row-Level Security (RLS) enabled but lacks proper policies to allow users to insert their profile during registration.
 
 ## Solution: Apply RLS Policies
 
-### Quick Fix (5 minutes)
+### ⚠️ IMPORTANT: If You Already Ran the Migration
+
+If you've already applied the migration but still see the error, you likely have **duplicate or conflicting policies**. Follow these steps:
+
+#### Step 1: Clean Up Existing Policies (Required if migration was already run)
+
+1. **Open Supabase Dashboard** → SQL Editor
+2. **Run the cleanup script first:**
+   - Open `supabase/migrations/cleanup_profiles_policies.sql`
+   - Copy and paste into SQL Editor
+   - Click "Run"
+   - This removes all duplicate and conflicting policies
+
+3. **Verify cleanup:**
+   ```sql
+   SELECT policyname FROM pg_policies WHERE tablename = 'profiles';
+   ```
+   Should return 0 rows after cleanup.
+
+#### Step 2: Apply the Updated Migration
+
+1. **Open SQL Editor** (new query)
+2. **Copy and paste** the contents of `supabase/migrations/20260211_fix_profiles_rls.sql`
+3. **Click "Run"**
+4. Wait for "Success" message
+
+### Quick Fix for New Setup (5 minutes)
+
+If this is a fresh setup with no existing policies:
 
 1. **Log in to Supabase Dashboard**
    - Go to [https://app.supabase.com](https://app.supabase.com)
@@ -34,20 +62,28 @@ Error creating profile:
 5. **Verify the Fix**
    - Go to "Table Editor" → Select "profiles" table
    - Click the shield icon (🛡️) to see "Policies"
-   - You should see 4 policies:
-     - ✅ Users can insert their own profile
-     - ✅ Users can read their own profile
-     - ✅ Users can update their own profile
-     - ✅ Authenticated users can read all profiles
+   - You should see exactly 4 policies:
+     - ✅ Enable insert for authenticated users
+     - ✅ Enable read for own profile
+     - ✅ Enable read for all authenticated users
+     - ✅ Enable update for own profile
 
 ### What These Policies Do
 
-| Policy Name | Type | Purpose |
-|------------|------|---------|
-| Users can insert their own profile | INSERT | Allows new users to create their profile during signup |
-| Users can read their own profile | SELECT | Allows users to view their own profile data |
-| Users can update their own profile | UPDATE | Allows users to modify their profile settings |
-| Authenticated users can read all profiles | SELECT | Allows viewing other officers for dropdowns and assignments |
+| Policy Name | Type | Applies To | Purpose |
+|------------|------|------------|---------|
+| Enable insert for authenticated users | INSERT | authenticated | Allows authenticated users to create their profile during signup |
+| Enable read for own profile | SELECT | authenticated | Allows users to view their own profile data |
+| Enable read for all authenticated users | SELECT | authenticated | Allows viewing other officers for dropdowns and assignments |
+| Enable update for own profile | UPDATE | authenticated | Allows users to modify their profile settings |
+
+### Key Differences from Previous Version
+
+The updated migration includes:
+- ✅ **`TO authenticated`** clause - Ensures policies apply to authenticated users, not public
+- ✅ **Cleaner policy names** - Avoids conflicts with existing policies
+- ✅ **Proper scoping** - Uses `USING (true)` for read-all policy instead of `auth.role()` check
+- ✅ **Cleanup script** - Removes duplicate/conflicting policies before applying new ones
 
 ## Testing the Fix
 

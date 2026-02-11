@@ -41,6 +41,27 @@ supabase db execute --file supabase/migrations/MIGRATION_FILE.sql
 
 ## Available Migrations
 
+### cleanup_profiles_policies.sql
+
+**Purpose**: Removes duplicate and conflicting RLS policies on the profiles table.
+
+**When to use**: 
+- ⚠️ **Run this FIRST** if you've already applied the main migration but still get RLS errors
+- If you see duplicate policies in your Supabase dashboard
+- If policies show "Applies to: public" instead of "authenticated"
+
+**What it does**:
+- Drops all existing RLS policies on the profiles table
+- Prepares for a clean reapplication of the correct policies
+
+**Usage**:
+```sql
+-- In Supabase SQL Editor, run this first:
+DROP POLICY IF EXISTS "Users can insert their own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+-- ... (see file for complete list)
+```
+
 ### 20260211_fix_profiles_rls.sql
 
 **Purpose**: Fixes the Row-Level Security (RLS) policies for the `profiles` table to allow new officer registration.
@@ -52,10 +73,16 @@ Error: new row violates row-level security policy for table "profiles"
 
 **What it does**:
 1. Enables RLS on the `profiles` table
-2. Creates policy to allow users to insert their own profile during registration
+2. Creates policy to allow **authenticated users** to insert their own profile during registration
 3. Creates policy to allow users to read their own profile
 4. Creates policy to allow users to update their own profile
 5. Creates policy to allow all authenticated users to read all profiles (needed for officer dropdowns)
+
+**Key Changes in Updated Version**:
+- ✅ Uses `TO authenticated` to properly scope policies to authenticated users
+- ✅ Cleaner policy names to avoid conflicts
+- ✅ Better handling of the signup edge case
+- ✅ Includes cleanup instructions for duplicate policies
 
 **Required**: ✅ This migration must be applied for officer registration to work properly.
 
