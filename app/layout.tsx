@@ -12,9 +12,9 @@ const google_sans = Google_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Railway Protection Force Court Cell",
+  title: "Railway Protection Force FIR/Case Registration Portal",
   description:
-    "A web application for managing court cell operations of the Railway Protection Force.",
+    "A web application for managing FIR and case registration operations of the Railway Protection Force.",
 };
 
 export default function RootLayout({

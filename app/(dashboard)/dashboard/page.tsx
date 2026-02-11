@@ -98,14 +98,14 @@ const Dashboard: React.FC = () => {
     switch (status) {
       case "approved":
       case "forwarded_to_court":
-        return "text-[hsl(var(--success))]";
+        return "text-green-600";
       case "pending_approval":
-        return "text-[hsl(var(--warning))]";
+        return "text-yellow-600";
       case "draft":
       case "in_progress":
-        return "text-primary";
+        return "text-blue-600";
       default:
-        return "text-muted-foreground";
+        return "text-gray-500";
     }
   };
 
