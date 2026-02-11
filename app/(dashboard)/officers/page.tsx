@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/select";
 import { UserPlus, Search, Users, Edit, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/auth-context";
 
 interface Officer {
   id: string;
@@ -52,6 +53,7 @@ interface RailwayPost {
 
 const Officers: React.FC = () => {
   const { toast } = useToast();
+  const { signUp } = useAuth();
   const [officers, setOfficers] = useState<Officer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -66,6 +68,9 @@ const Officers: React.FC = () => {
     post_name: "",
     railway_zone: "",
     phone: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const designations = [
@@ -147,12 +152,58 @@ const Officers: React.FC = () => {
           description: "Officer details have been updated successfully",
         });
       } else {
-        // For new officers, we need to create auth user first
-        // This is handled during registration, so show info
+        // Create new officer with credentials
+        if (!formData.email || !formData.password) {
+          toast({
+            title: "Validation Error",
+            description: "Email and password are required for new officers",
+            variant: "destructive",
+          });
+          setSaving(false);
+          return;
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+          toast({
+            title: "Password Mismatch",
+            description: "Passwords do not match",
+            variant: "destructive",
+          });
+          setSaving(false);
+          return;
+        }
+
+        if (formData.password.length < 6) {
+          toast({
+            title: "Weak Password",
+            description: "Password must be at least 6 characters",
+            variant: "destructive",
+          });
+          setSaving(false);
+          return;
+        }
+
+        const { error } = await signUp(formData.email, formData.password, {
+          full_name: formData.full_name,
+          designation: formData.designation,
+          post_name: formData.post_name,
+          railway_zone: formData.railway_zone,
+          phone: formData.phone || null,
+        });
+
+        if (error) {
+          toast({
+            title: "Registration Failed",
+            description: error.message,
+            variant: "destructive",
+          });
+          setSaving(false);
+          return;
+        }
+
         toast({
-          title: "Info",
-          description:
-            "New officers should register through the registration page to get login credentials.",
+          title: "Officer Registered",
+          description: "New officer has been registered successfully. They will receive a verification email.",
         });
       }
 
@@ -178,6 +229,9 @@ const Officers: React.FC = () => {
       post_name: "",
       railway_zone: "",
       phone: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
     });
     setEditingOfficer(null);
   };
@@ -190,6 +244,9 @@ const Officers: React.FC = () => {
       post_name: officer.post_name,
       railway_zone: officer.railway_zone,
       phone: officer.phone || "",
+      email: "",
+      password: "",
+      confirmPassword: "",
     });
     setDialogOpen(true);
   };
@@ -232,7 +289,7 @@ const Officers: React.FC = () => {
               <DialogDescription>
                 {editingOfficer
                   ? "Update officer details below"
-                  : "New officers should register via the registration page to get login credentials. Use this to edit existing officers."}
+                  : "Register a new officer with login credentials and profile information"}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -281,6 +338,53 @@ const Officers: React.FC = () => {
                 />
               </div>
 
+              {!editingOfficer && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Email *</Label>
+                    <Input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      placeholder="officer.email@rpf.gov.in"
+                      required={!editingOfficer}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Password *</Label>
+                      <Input
+                        type="password"
+                        value={formData.password}
+                        onChange={(e) =>
+                          setFormData({ ...formData, password: e.target.value })
+                        }
+                        placeholder="At least 6 characters"
+                        required={!editingOfficer}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Confirm Password *</Label>
+                      <Input
+                        type="password"
+                        value={formData.confirmPassword}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            confirmPassword: e.target.value,
+                          })
+                        }
+                        placeholder="Re-enter password"
+                        required={!editingOfficer}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
               <div className="space-y-2">
                 <Label>Railway Post *</Label>
                 <Select onValueChange={handlePostChange}>
@@ -309,7 +413,7 @@ const Officers: React.FC = () => {
                 </Button>
                 <Button type="submit" disabled={saving}>
                   {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {editingOfficer ? "Update Officer" : "Add Officer"}
+                  {editingOfficer ? "Update Officer" : "Register Officer"}
                 </Button>
               </DialogFooter>
             </form>
