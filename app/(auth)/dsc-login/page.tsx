@@ -154,7 +154,7 @@ export default function DscLoginPage() {
                 className="text-blue-600 cursor-pointer px-1"
                 onClick={() => router.push("/login")}
               >
-                RPF Court Cell Login
+                RPF FIR/Case Registration Portal Login
               </Button>
             </p>
           </CardContent>

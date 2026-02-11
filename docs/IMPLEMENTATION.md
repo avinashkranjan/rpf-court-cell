@@ -1,4 +1,4 @@
-# RPF Court Cell Digitization System
+# RPF FIR/Case Registration Portal Digitization System
 
 ## Project Overview
 

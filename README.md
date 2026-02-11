@@ -1,10 +1,10 @@
-# RPF Court Cell Digitization System
+# RPF FIR/Case Registration Portal Digitization System
 
 A comprehensive web application for digitizing and centralizing the complete case lifecycle management for Railway Protection Force (RPF) legal proceedings.
 
 ## 🎯 System Overview
 
-This system digitizes RPF Court Cell workflows including:
+This system digitizes RPF FIR/Case Registration Portal workflows including:
 - Case registration and management
 - Accused profile management
 - Arrest memo generation (Annexure-A)

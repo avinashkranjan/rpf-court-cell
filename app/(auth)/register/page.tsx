@@ -122,7 +122,7 @@ export default function RegisterPage() {
                 Officer Registration
               </h2>
               <p className="text-sm text-gray-600">
-                Create your RPF Court Cell account
+                Create your RPF FIR/Case Registration Portal account
               </p>
             </div>
 

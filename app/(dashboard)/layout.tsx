@@ -88,7 +88,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                 <Image src="/rpf-logo.png" alt="RPF" width={30} height={30} />
               </div>
               <div>
-                <h1 className="font-semibold text-gray-900">RPF Court Cell</h1>
+                <h1 className="font-semibold text-gray-900">
+                  RPF FIR/Case Registration Portal
+                </h1>
                 <p className="text-sm text-gray-500">Digitization System</p>
               </div>
               <Button
@@ -175,7 +177,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           </Button>
           <div className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-blue-600" />
-            <span className="font-medium text-gray-900">RPF Court Cell</span>
+            <span className="font-medium text-gray-900">
+              RPF FIR/Case Registration Portal
+            </span>
           </div>
         </header>
 

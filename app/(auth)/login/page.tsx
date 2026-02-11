@@ -106,7 +106,7 @@ export default function LoginPage() {
             <div className="flex flex-col items-center gap-3 mb-6">
               <Image src="/rpf-logo.png" alt="RPF" width={70} height={70} />
               <h2 className="text-red-600 font-semibold text-lg">
-                RPF Court Cell Login
+                RPF FIR/Case Registration Portal Login
               </h2>
             </div>
 
