@@ -6,7 +6,6 @@ interface Profile {
   id: string;
   full_name: string;
   designation: string;
-  belt_number: string | null;
   post_name: string;
   railway_zone: string;
   phone: string | null;

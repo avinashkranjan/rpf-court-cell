@@ -38,7 +38,6 @@ interface Officer {
   id: string;
   full_name: string;
   designation: string;
-  belt_number: string | null;
   post_name: string;
   railway_zone: string;
   phone: string | null;
@@ -64,7 +63,6 @@ const Officers: React.FC = () => {
   const [formData, setFormData] = useState({
     full_name: "",
     designation: "",
-    belt_number: "",
     post_name: "",
     railway_zone: "",
     phone: "",
@@ -136,7 +134,6 @@ const Officers: React.FC = () => {
           .update({
             full_name: formData.full_name,
             designation: formData.designation,
-            belt_number: formData.belt_number || null,
             post_name: formData.post_name,
             railway_zone: formData.railway_zone,
             phone: formData.phone || null,
@@ -178,7 +175,6 @@ const Officers: React.FC = () => {
     setFormData({
       full_name: "",
       designation: "",
-      belt_number: "",
       post_name: "",
       railway_zone: "",
       phone: "",
@@ -191,7 +187,6 @@ const Officers: React.FC = () => {
     setFormData({
       full_name: officer.full_name,
       designation: officer.designation,
-      belt_number: officer.belt_number || "",
       post_name: officer.post_name,
       railway_zone: officer.railway_zone,
       phone: officer.phone || "",
@@ -203,7 +198,6 @@ const Officers: React.FC = () => {
     (o) =>
       o.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       o.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      o.belt_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       o.post_name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
@@ -233,7 +227,7 @@ const Officers: React.FC = () => {
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>
-                {editingOfficer ? "Edit Officer" : "Add New Officer"}
+                {editingOfficer ? "Edit Officer" : "Officer Registration"}
               </DialogTitle>
               <DialogDescription>
                 {editingOfficer
@@ -276,30 +270,15 @@ const Officers: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Belt Number</Label>
-                  <Input
-                    value={formData.belt_number}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        belt_number: e.target.value,
-                      })
-                    }
-                    placeholder="e.g., 12345"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Phone</Label>
-                  <Input
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                    placeholder="e.g., 9876543210"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label>Phone</Label>
+                <Input
+                  value={formData.phone}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
+                  placeholder="e.g., 9876543210"
+                />
               </div>
 
               <div className="space-y-2">
@@ -344,7 +323,7 @@ const Officers: React.FC = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name, designation, belt number, or post..."
+              placeholder="Search by name, designation, or post..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -378,7 +357,6 @@ const Officers: React.FC = () => {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Designation</TableHead>
-                    <TableHead>Belt No.</TableHead>
                     <TableHead>Post</TableHead>
                     <TableHead>Phone</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -393,7 +371,6 @@ const Officers: React.FC = () => {
                       <TableCell>
                         <Badge variant="secondary">{officer.designation}</Badge>
                       </TableCell>
-                      <TableCell>{officer.belt_number || "-"}</TableCell>
                       <TableCell>{officer.post_name}</TableCell>
                       <TableCell>{officer.phone || "-"}</TableCell>
                       <TableCell className="text-right">

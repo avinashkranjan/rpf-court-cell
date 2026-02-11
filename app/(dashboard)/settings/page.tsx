@@ -59,7 +59,6 @@ const Settings: React.FC = () => {
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || "",
     designation: profile?.designation || "",
-    belt_number: profile?.belt_number || "",
     post_name: profile?.post_name || "",
     railway_zone: profile?.railway_zone || "",
     phone: profile?.phone || "",
@@ -70,7 +69,6 @@ const Settings: React.FC = () => {
       setFormData({
         full_name: profile.full_name || "",
         designation: profile.designation || "",
-        belt_number: profile.belt_number || "",
         post_name: profile.post_name || "",
         railway_zone: profile.railway_zone || "",
         phone: profile.phone || "",
@@ -114,7 +112,6 @@ const Settings: React.FC = () => {
         .update({
           full_name: formData.full_name,
           designation: formData.designation,
-          belt_number: formData.belt_number || null,
           post_name: formData.post_name,
           railway_zone: formData.railway_zone,
           phone: formData.phone || null,
@@ -218,17 +215,6 @@ const Settings: React.FC = () => {
                       }
                       placeholder="e.g., SI, ASI, HC"
                       required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="belt_number">Belt Number</Label>
-                    <Input
-                      id="belt_number"
-                      value={formData.belt_number}
-                      onChange={(e) =>
-                        handleChange("belt_number", e.target.value)
-                      }
-                      placeholder="Your belt number"
                     />
                   </div>
                   <div className="space-y-2">

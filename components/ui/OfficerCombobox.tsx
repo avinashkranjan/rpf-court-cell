@@ -21,7 +21,6 @@ interface Officer {
   id: string;
   full_name: string;
   designation: string;
-  belt_number: string | null;
   post_name: string;
 }
 
@@ -47,7 +46,7 @@ const OfficerCombobox: React.FC<OfficerComboboxProps> = ({
       setLoading(true);
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, designation, belt_number, post_name")
+        .select("id, full_name, designation, post_name")
         .order("full_name");
 
       if (!error && data) {
@@ -75,8 +74,6 @@ const OfficerCombobox: React.FC<OfficerComboboxProps> = ({
               <User className="h-4 w-4 shrink-0" />
               <span className="truncate">
                 {selectedOfficer.designation}/{selectedOfficer.full_name}
-                {selectedOfficer.belt_number &&
-                  ` (${selectedOfficer.belt_number})`}
               </span>
             </span>
           ) : (
@@ -87,7 +84,7 @@ const OfficerCombobox: React.FC<OfficerComboboxProps> = ({
       </PopoverTrigger>
       <PopoverContent className="w-[400px] p-0 z-50 bg-popover" align="start">
         <Command>
-          <CommandInput placeholder="Search officers by name, designation, belt..." />
+          <CommandInput placeholder="Search officers by name, designation..." />
           <CommandList>
             <CommandEmpty>
               {loading ? "Loading officers..." : "No officer found."}
@@ -96,7 +93,7 @@ const OfficerCombobox: React.FC<OfficerComboboxProps> = ({
               {officers.map((officer) => (
                 <CommandItem
                   key={officer.id}
-                  value={`${officer.full_name} ${officer.designation} ${officer.belt_number || ""} ${officer.post_name}`}
+                  value={`${officer.full_name} ${officer.designation} ${officer.post_name}`}
                   onSelect={() => {
                     onChange(
                       officer.id === value ? "" : officer.id,
@@ -116,7 +113,6 @@ const OfficerCombobox: React.FC<OfficerComboboxProps> = ({
                       {officer.designation}/{officer.full_name}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {officer.belt_number && `Belt: ${officer.belt_number} | `}
                       {officer.post_name}
                     </span>
                   </div>
