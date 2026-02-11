@@ -1,32 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-// import { useAuthStore } from "@/lib/store/authStore";
+import { useAuth } from "@/context/auth-context";
 
 export default function Home() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  // const { isAuthenticated, isLoading } = useAuthStore();
-
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    const storedAuth = localStorage.getItem("rpf_auth");
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsAuthenticated(Boolean(storedAuth));
-    setIsLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading) {
-      if (isAuthenticated) {
+    if (!loading) {
+      if (user) {
         router.push("/dashboard");
       } else {
         router.push("/login");
       }
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [user, loading, router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">
