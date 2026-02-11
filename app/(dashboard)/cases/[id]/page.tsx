@@ -201,15 +201,12 @@ const CaseDetails: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const colors: Record<string, string> = {
-      draft: "bg-muted text-muted-foreground",
-      in_progress: "bg-primary text-primary-foreground",
-      pending_approval:
-        "bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))]",
-      approved:
-        "bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]",
-      forwarded_to_court:
-        "bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]",
-      closed: "bg-muted text-muted-foreground",
+      draft: "bg-gray-200 text-gray-700",
+      in_progress: "bg-blue-500 text-white",
+      pending_approval: "bg-yellow-400 text-black",
+      approved: "bg-green-500 text-white",
+      forwarded_to_court: "bg-emerald-500 text-white",
+      closed: "bg-gray-300 text-gray-700",
     };
 
     return (
