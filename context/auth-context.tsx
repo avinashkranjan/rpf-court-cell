@@ -94,6 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signUp = async (email: string, password: string, profileData: Omit<Profile, 'id'>) => {
+    // Step 1: Create the auth user in Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -104,6 +105,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (error) return { error };
 
+    // Step 2: Create the user's profile in the profiles table
+    // NOTE: This requires proper Row-Level Security (RLS) policies on the profiles table.
+    // Without the correct RLS policies, this insert will fail with error code 42501.
+    // The required policies are defined in: supabase/migrations/20260211_fix_profiles_rls.sql
     if (data.user) {
       const { error: profileError } = await supabase
         .from('profiles')

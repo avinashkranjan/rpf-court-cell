@@ -1,5 +1,35 @@
 # Database Migration Notes
 
+## Row-Level Security (RLS) Policies for Profiles Table
+
+### Status: ✅ CRITICAL - Must be applied for authentication to work
+
+**Issue:** Without proper RLS policies, officer registration fails with error:
+```
+Error: new row violates row-level security policy for table "profiles"
+```
+
+**Migration File:** `supabase/migrations/20260211_fix_profiles_rls.sql`
+
+**What it does:**
+1. Enables RLS on the `profiles` table
+2. Creates policies to allow:
+   - Users to insert their own profile during signup
+   - Users to read their own profile
+   - Users to update their own profile
+   - All authenticated users to read all profiles (for officer dropdowns)
+
+**How to apply:**
+1. Log in to Supabase Dashboard
+2. Go to SQL Editor
+3. Copy and paste the contents of `supabase/migrations/20260211_fix_profiles_rls.sql`
+4. Click "Run"
+5. Verify success
+
+**Detailed guide:** See [docs/DATABASE_SETUP.md](./docs/DATABASE_SETUP.md)
+
+---
+
 ## Belt Number Field Removal
 
 ### Changes Made in Application Code
