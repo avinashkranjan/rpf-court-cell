@@ -1,6 +1,6 @@
-import React from 'react';
-import { Check, Circle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Step {
   id: number;
@@ -25,45 +25,49 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
       <div className="flex items-center justify-between">
         {steps.map((step, index) => (
           <React.Fragment key={step.id}>
-            <div
-              className={cn(
-                "flex flex-col items-center cursor-pointer",
-                onStepClick && "hover:opacity-80"
-              )}
-              onClick={() => onStepClick?.(step.id)}
-            >
+            <div className="flex flex-col items-center">
               <div
                 className={cn(
-                  "step-indicator transition-all duration-200",
-                  step.completed && "step-completed",
-                  currentStep === step.id && !step.completed && "step-active",
-                  currentStep !== step.id && !step.completed && "step-pending"
+                  "flex flex-col items-center cursor-pointer relative",
+                  onStepClick && "hover:opacity-80",
                 )}
+                onClick={() => onStepClick?.(step.id)}
               >
-                {step.completed ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  step.id
-                )}
+                <div
+                  className={cn(
+                    "flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-all duration-200",
+                    step.completed && "bg-green-500 text-white",
+                    currentStep === step.id &&
+                      !step.completed &&
+                      "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2",
+                    currentStep !== step.id &&
+                      !step.completed &&
+                      "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {step.completed ? <Check className="h-4 w-4" /> : step.id}
+                </div>
+                <span
+                  className={cn(
+                    "text-xs mt-1 text-center max-w-[80px] hidden sm:block",
+                    currentStep === step.id
+                      ? "text-primary font-medium"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  {step.shortName}
+                </span>
               </div>
-              <span
-                className={cn(
-                  "text-xs mt-1 text-center max-w-[80px] hidden sm:block",
-                  currentStep === step.id
-                    ? "text-primary font-medium"
-                    : "text-muted-foreground"
-                )}
-              >
-                {step.shortName}
-              </span>
             </div>
             {index < steps.length - 1 && (
-              <div
-                className={cn(
-                  "flex-1 h-0.5 mx-2",
-                  step.completed ? "bg-[hsl(var(--success))]" : "bg-border"
-                )}
-              />
+              <div className="flex-1 mx-2 relative">
+                <div
+                  className={cn(
+                    "absolute top-1/2 -translate-y-1/2 w-full h-0.5 transition-colors duration-200",
+                    step.completed ? "bg-green-500" : "bg-border",
+                  )}
+                />
+              </div>
             )}
           </React.Fragment>
         ))}
