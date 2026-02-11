@@ -79,19 +79,20 @@ const signUp = async (
 - When admins create officers from the Officers page, we don't want to log them out
 - The function now preserves the admin's session while temporarily using the new user's session for profile creation
 - Self-registration still works as before (autoSignIn defaults to true)
+- Error handling ensures the admin session is always restored, even if profile creation fails
 
-### 3. Cleanup Script
+### 4. Cleanup Script
 Created `supabase/migrations/cleanup_profiles_policies.sql` to remove duplicate policies from multiple migration attempts.
 
-### 4. Documentation
+### 5. Documentation
 Created comprehensive documentation:
 - **supabase/migrations/README.md** - Migration application guide
 - **docs/DATABASE_SETUP.md** - Detailed setup with session handling explanation
-- **docs/TROUBLESHOOTING.md** - Common issues including session timing
+- **docs/TROUBLESHOOTING.md** - Common issues including session timing and admin session preservation
 - **Updated README.md** - Added database setup section
 - **Updated DB_MIGRATION_NOTES.md** - Added RLS policy information
 
-### 5. Configuration
+### 6. Configuration
 - **`.env.local.example`** - Template for Supabase credentials
 - **Enhanced code comments** - Explained session requirement in auth-context.tsx
 

@@ -109,65 +109,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (error) return { error };
+    if (!data.user || !data.session) return { error: new Error('No user or session returned from signup') };
 
     // Step 2: Create the user's profile in the profiles table
     // IMPORTANT: The session from signUp must be established before the profile insert
     // Otherwise, auth.uid() will be NULL in RLS policy checks and cause error 42501
-    if (data.user && data.session) {
-      // Only set session if autoSignIn is true (for self-registration)
-      // When admins create officers, we don't want to override their session
-      if (autoSignIn) {
-        await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-        });
-      } else {
-        // For admin-created officers, we need to use the admin's session
-        // but temporarily use the new user's JWT for the insert
-        // Save current session
-        const currentSession = (await supabase.auth.getSession()).data.session;
-        
-        // Temporarily set new user's session for profile insert
-        await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-        });
-        
-        // Insert profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            ...profileData,
-          });
-
-        // Restore admin's session
-        if (currentSession) {
-          await supabase.auth.setSession({
-            access_token: currentSession.access_token,
-            refresh_token: currentSession.refresh_token,
-          });
-        }
-
-        if (profileError) {
-          console.error('Error creating profile:', profileError);
-          return { error: profileError as unknown as Error };
-        }
-        
-        return { error: null };
+    
+    let currentSession = null;
+    
+    if (!autoSignIn) {
+      // For admin-created officers, save the admin's current session
+      const { data: sessionData } = await supabase.auth.getSession();
+      currentSession = sessionData.session;
+      
+      if (!currentSession) {
+        return { error: new Error('No active session found. Admin must be logged in to create officers.') };
       }
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: data.user.id,
-          ...profileData,
-        });
-
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-        return { error: profileError as unknown as Error };
-      }
+    }
+    
+    // Set the new user's session temporarily (needed for RLS check)
+    await supabase.auth.setSession({
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+    });
+    
+    // Insert profile
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
+        id: data.user.id,
+        ...profileData,
+      });
+    
+    // Restore admin's session if this was an admin-created officer
+    if (!autoSignIn && currentSession) {
+      await supabase.auth.setSession({
+        access_token: currentSession.access_token,
+        refresh_token: currentSession.refresh_token,
+      });
+    }
+    
+    if (profileError) {
+      console.error('Error creating profile:', profileError);
+      return { error: profileError as unknown as Error };
     }
 
     return { error: null };
