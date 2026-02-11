@@ -17,7 +17,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, profileData: Omit<Profile, 'id'>) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, profileData: Omit<Profile, 'id'>, autoSignIn?: boolean) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -93,29 +93,80 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error };
   };
 
-  const signUp = async (email: string, password: string, profileData: Omit<Profile, 'id'>) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    profileData: Omit<Profile, 'id'>,
+    autoSignIn: boolean = true
+  ) => {
+    // Step 1: Create the auth user in Supabase Auth
+    // Pass profile data in user metadata so the database trigger can create the profile
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: window.location.origin,
+        data: {
+          full_name: profileData.full_name,
+          designation: profileData.designation,
+          post_name: profileData.post_name,
+          railway_zone: profileData.railway_zone,
+          phone: profileData.phone,
+        },
       },
     });
 
     if (error) return { error };
+    if (!data.user) return { error: new Error('No user returned from signup') };
 
-    if (data.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: data.user.id,
-          ...profileData,
-        });
+    // Step 2: Handle profile creation based on whether email confirmation is enabled
+    // If no session is returned, email confirmation is enabled and profile will be created by trigger
+    if (!data.session) {
+      console.log('Email confirmation required. Profile will be created by database trigger.');
+      return { error: null };
+    }
 
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-        return { error: profileError as unknown as Error };
+    // Step 3: If session exists, create profile directly (legacy support)
+    // This handles the case when email confirmation is disabled
+    let currentSession = null;
+    
+    if (!autoSignIn) {
+      // For admin-created officers, save the admin's current session
+      const { data: sessionData } = await supabase.auth.getSession();
+      currentSession = sessionData.session;
+      
+      if (!currentSession) {
+        return { error: new Error('No active session found. Admin must be logged in to create officers.') };
       }
+    }
+    
+    // Set the new user's session temporarily (needed for RLS check)
+    await supabase.auth.setSession({
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+    });
+    
+    // Insert profile (this may fail if trigger already created it, which is fine)
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
+        id: data.user.id,
+        ...profileData,
+      });
+    
+    // Restore admin's session if this was an admin-created officer
+    if (!autoSignIn && currentSession) {
+      await supabase.auth.setSession({
+        access_token: currentSession.access_token,
+        refresh_token: currentSession.refresh_token,
+      });
+    }
+    
+    // Ignore duplicate key errors (profile already created by trigger)
+    // PostgreSQL error code 23505 = unique_violation (duplicate key)
+    if (profileError && profileError.code !== '23505') {
+      console.error('Error creating profile:', profileError);
+      return { error: profileError as unknown as Error };
     }
 
     return { error: null };

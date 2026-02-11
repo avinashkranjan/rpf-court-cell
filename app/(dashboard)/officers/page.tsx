@@ -189,7 +189,7 @@ const Officers: React.FC = () => {
           post_name: formData.post_name,
           railway_zone: formData.railway_zone,
           phone: formData.phone || null,
-        });
+        }, false); // Don't auto sign-in when admin creates officer
 
         if (error) {
           toast({

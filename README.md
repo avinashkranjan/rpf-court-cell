@@ -48,6 +48,7 @@ This system digitizes RPF FIR/Case Registration Portal workflows including:
 ### Prerequisites
 - Node.js 20 or higher
 - npm or yarn
+- A Supabase account and project (for backend services)
 
 ### Installation
 
@@ -60,17 +61,41 @@ cd rpf-court-cell
 
 # Install dependencies
 npm install
+```
 
+### Database Setup (Required for Authentication)
+
+Before running the application, you must apply database migrations to set up Row-Level Security policies:
+
+1. Log in to your [Supabase Dashboard](https://app.supabase.com)
+2. Navigate to **SQL Editor**
+3. Open and execute the migration file: `supabase/migrations/20260211_fix_profiles_rls.sql`
+4. Verify the policies were created successfully
+
+See detailed instructions in [supabase/migrations/README.md](./supabase/migrations/README.md)
+
+**⚠️ Important**: Without applying the RLS migration, officer registration will fail with:
+```
+Error: new row violates row-level security policy for table "profiles"
+```
+
+### Environment Setup
+
+Create a `.env.local` file in the root directory with your Supabase credentials:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
+```
+
+### Running the Application
+
+```bash
 # Run development server
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to access the application.
-
-### Default Login
-- Username: Any user ID
-- Password: Any password
-- Captcha: Enter the displayed code
 
 ## 📁 Project Structure
 

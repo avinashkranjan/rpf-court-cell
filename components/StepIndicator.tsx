@@ -22,13 +22,13 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
 }) => {
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center">
         {steps.map((step, index) => (
           <React.Fragment key={step.id}>
             <div className="flex flex-col items-center">
               <div
                 className={cn(
-                  "flex flex-col items-center cursor-pointer relative",
+                  "flex flex-col items-center cursor-pointer",
                   onStepClick && "hover:opacity-80",
                 )}
                 onClick={() => onStepClick?.(step.id)}
@@ -49,7 +49,7 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
                 </div>
                 <span
                   className={cn(
-                    "text-xs mt-1 text-center max-w-[80px] hidden sm:block",
+                    "text-xs mt-2 font-semibold text-center max-w-[80px] hidden sm:block",
                     currentStep === step.id
                       ? "text-primary font-medium"
                       : "text-muted-foreground",
@@ -60,10 +60,10 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
               </div>
             </div>
             {index < steps.length - 1 && (
-              <div className="flex-1 mx-2 relative">
+              <div className="flex-1 mx-2 self-center">
                 <div
                   className={cn(
-                    "absolute top-1/2 -translate-y-1/2 w-full h-0.5 transition-colors duration-200",
+                    "h-0.5 transition-colors duration-200 -mt-2",
                     step.completed ? "bg-green-500" : "bg-border",
                   )}
                 />

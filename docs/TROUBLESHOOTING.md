@@ -1,0 +1,380 @@
+# Troubleshooting Guide
+
+This guide helps resolve common issues with the RPF Court Cell application.
+
+## Table of Contents
+1. [Authentication Issues](#authentication-issues)
+2. [Database Connection Issues](#database-connection-issues)
+3. [Development Environment Issues](#development-environment-issues)
+
+---
+
+## Authentication Issues
+
+### Error: "No user or session returned from signup" / Profile table empty
+
+**Symptom:** 
+- User registration appears to succeed
+- User is created in Supabase `auth.users` table
+- But profile is NOT created in `profiles` table
+- Error message: "No user or session returned from signup"
+
+**Cause:** Email confirmation is enabled in Supabase. When email confirmation is required, `signUp()` returns a user but no session until the email is verified. Without a session, RLS policies prevent profile creation.
+
+**Solution (Recommended):** Use database trigger to auto-create profiles
+
+1. **Apply the trigger migration:**
+   - In Supabase SQL Editor, run `supabase/migrations/20260211_auto_create_profile_trigger.sql`
+   - This creates a database trigger that automatically creates profiles when users sign up
+
+2. **Verify the trigger:**
+   ```sql
+   SELECT trigger_name, event_manipulation, event_object_table 
+   FROM information_schema.triggers 
+   WHERE trigger_name = 'on_auth_user_created';
+   ```
+   Should return the trigger on `auth.users` table
+
+3. **Test registration:**
+   - Register a new officer
+   - Check `profiles` table - profile should be created immediately
+   - User will receive email verification link
+   - After verification, they can log in
+
+**How it works:**
+- The trigger runs when a new user is inserted into `auth.users`
+- It reads profile data from user metadata and creates the profile entry
+- Works with SECURITY DEFINER, bypassing RLS policies
+- Handles both self-registration and admin-created officers
+
+**Alternative (if trigger not preferred):**
+Disable email confirmation in Supabase:
+1. Go to Supabase Dashboard → Authentication → Providers
+2. Find Email provider → Settings
+3. Disable "Confirm email"
+4. Now `signUp()` will return a session immediately
+
+---
+
+### Error: "new row violates row-level security policy for table 'profiles'"
+
+**Symptom:** When registering a new officer, you see an error in the browser console:
+```
+Error creating profile:
+{code: '42501', details: null, hint: null, message: 'new row violates row-level security policy for table "profiles"'}
+```
+
+**Causes:** This error can occur due to two different issues:
+
+1. **Missing or incorrect RLS policies** on the profiles table
+2. **Session not established** before profile insertion (even with correct policies)
+
+**Solutions:**
+
+**Step 1: Verify RLS Policies are Correct**
+```sql
+-- Run this in Supabase SQL Editor
+SELECT policyname, cmd, roles 
+FROM pg_policies 
+WHERE tablename = 'profiles';
+```
+
+Should return exactly 4 policies, all with `roles = {authenticated}`:
+- Enable insert for authenticated users (INSERT)
+- Enable read for own profile (SELECT)
+- Enable read for all authenticated users (SELECT)
+- Enable update for own profile (UPDATE)
+
+If policies are missing or incorrect:
+1. Run cleanup: `supabase/migrations/cleanup_profiles_policies.sql`
+2. Apply migration: `supabase/migrations/20260211_fix_profiles_rls.sql`
+
+**Step 2: Ensure Application Code Sets Session** (Critical!)
+
+Even with correct RLS policies, the error can occur if the session isn't set before profile insertion. The application code must be updated to:
+
+```typescript
+// In context/auth-context.tsx - signUp function
+const { data, error } = await supabase.auth.signUp({ email, password });
+
+// CRITICAL: Set session explicitly before profile insert
+if (data.user && data.session) {
+  await supabase.auth.setSession({
+    access_token: data.session.access_token,
+    refresh_token: data.session.refresh_token,
+  });
+  
+  // Now profile insert will work
+  await supabase.from('profiles').insert({ id: data.user.id, ...profileData });
+}
+```
+
+**Why this is needed:**
+- `auth.signUp()` creates a user but doesn't immediately set the client session
+- The RLS policy checks `auth.uid()` which is NULL without an active session
+- Explicitly setting the session ensures `auth.uid()` returns the user ID
+
+**Step 3: Use Database Trigger (Best Solution)**
+Apply the auto-create profile trigger to handle email confirmation scenarios. See "No user or session returned from signup" section above.
+
+---
+
+### Error: "Invalid login credentials" when trying to sign in
+
+**Possible Causes:**
+1. **Email not verified** - Check your email for the verification link from Supabase
+2. **Wrong password** - Passwords are case-sensitive
+3. **User doesn't exist** - Complete registration first
+
+**Solution:**
+1. If newly registered, check your email for verification link
+2. Click the verification link to activate your account
+3. Try logging in again
+4. If still failing, try password reset
+
+**Password Requirements:**
+- Minimum 6 characters
+- Must match the password confirmation field during registration
+
+---
+
+### Users can't see other officers in dropdowns
+
+**Symptom:** Officer selection dropdowns are empty or only show the current user.
+
+**Cause:** Missing the "Authenticated users can read all profiles" RLS policy.
+
+**Solution:**
+Ensure this policy exists on the `profiles` table:
+```sql
+CREATE POLICY "Enable read for all authenticated users"
+ON profiles
+FOR SELECT
+TO authenticated
+USING (true);
+```
+
+This policy is included in the main RLS migration file.
+
+---
+
+### Admin creates officer but profile table is empty / "No officers found"
+
+**Symptom:** 
+- Admin successfully creates a new officer from the Officers page
+- User appears in Supabase `auth.users` table
+- But profile is not created in `profiles` table
+- Admin may be logged out or sees "No officers found"
+
+**Cause:** The `signUp()` function was overriding the admin's session with the newly created officer's session, causing the admin to be logged out.
+
+**Solution:**
+This has been fixed in the latest code (commit 46f47aa). The `signUp()` function now accepts an optional `autoSignIn` parameter:
+- `true` (default): For self-registration - sets the new user's session
+- `false`: For admin-created officers - preserves admin's session and restores it after profile creation
+
+**If you're still experiencing this issue:**
+1. Pull the latest code changes
+2. Restart your development server
+3. Try creating an officer again
+4. The officer should appear in the profiles table and the admin should remain logged in
+
+---
+
+## Database Connection Issues
+
+### Error: "Failed to fetch" or "Network error" when trying to authenticate
+
+**Possible Causes:**
+1. Missing or incorrect Supabase credentials in `.env.local`
+2. Supabase project is paused (happens on free tier after inactivity)
+3. Network/firewall blocking Supabase
+
+**Solution:**
+
+**Step 1:** Verify your `.env.local` file exists and has correct values:
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-anon-key
+```
+
+**Step 2:** Get the correct values:
+1. Go to [Supabase Dashboard](https://app.supabase.com)
+2. Select your project
+3. Settings → API
+4. Copy "Project URL" and "anon/public" key
+
+**Step 3:** Restart your development server:
+```bash
+npm run dev
+```
+
+**Step 4:** Check if your Supabase project is active:
+- In Supabase Dashboard, projects should show "Active" status
+- If "Paused", click "Restore" to reactivate (may take a few minutes)
+
+---
+
+### Error: "relation 'profiles' does not exist"
+
+**Cause:** The `profiles` table hasn't been created in your Supabase database.
+
+**Solution:**
+Create the table using this SQL in Supabase SQL Editor:
+
+```sql
+-- Create profiles table
+CREATE TABLE profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name TEXT NOT NULL,
+  designation TEXT NOT NULL,
+  post_name TEXT NOT NULL,
+  railway_zone TEXT NOT NULL,
+  phone TEXT,
+  belt_number TEXT,  -- Deprecated, will be removed
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Enable RLS
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+-- Then apply the RLS policies from the migration file
+```
+
+---
+
+## Development Environment Issues
+
+### Error: "Module not found" or import errors
+
+**Cause:** Dependencies not installed or corrupted node_modules.
+
+**Solution:**
+```bash
+# Remove node_modules and lock files
+rm -rf node_modules package-lock.json
+
+# Clear npm cache (optional)
+npm cache clean --force
+
+# Reinstall dependencies
+npm install
+
+# Restart dev server
+npm run dev
+```
+
+---
+
+### TypeScript errors about Supabase types
+
+**Symptom:** TypeScript complains about missing types or incorrect Database schema.
+
+**Cause:** The generated types in `integrations/supabase/types.ts` are out of sync with your database.
+
+**Solution:**
+Regenerate the types from your Supabase schema:
+
+```bash
+# Install Supabase CLI if not already installed
+npm install -g supabase
+
+# Login to Supabase
+supabase login
+
+# Link your project (replace YOUR_PROJECT_REF)
+supabase link --project-ref YOUR_PROJECT_REF
+
+# Generate new types
+npx supabase gen types typescript --linked > integrations/supabase/types.ts
+```
+
+---
+
+### Port 3000 already in use
+
+**Symptom:** Can't start dev server because port 3000 is occupied.
+
+**Solution:**
+
+**Option 1:** Stop the process using port 3000:
+```bash
+# Find the process
+lsof -i :3000
+
+# Kill it (replace PID with the actual process ID)
+kill -9 PID
+```
+
+**Option 2:** Use a different port:
+```bash
+PORT=3001 npm run dev
+```
+
+---
+
+## Getting More Help
+
+### Check Application Logs
+
+**Browser Console:**
+1. Open browser DevTools (F12)
+2. Go to Console tab
+3. Look for errors (red text)
+4. Check Network tab for failed requests
+
+**Supabase Logs:**
+1. Supabase Dashboard → Logs
+2. Check for authentication errors
+3. Look for policy violations or SQL errors
+
+### Common Log Messages
+
+| Message | Meaning | Action |
+|---------|---------|--------|
+| "new row violates row-level security policy" | Missing RLS policies | Apply RLS migration |
+| "Invalid JWT" | Auth token expired or invalid | Log out and log back in |
+| "permission denied for table" | Missing database permissions | Check RLS policies |
+| "relation does not exist" | Table not created | Create the table in Supabase |
+
+### Enable Debug Mode
+
+Add this to your `.env.local` for more verbose logging:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_key
+NODE_ENV=development
+```
+
+### Still Need Help?
+
+1. Check the [Supabase Documentation](https://supabase.com/docs)
+2. Review [Next.js Documentation](https://nextjs.org/docs)
+3. Open an issue in the repository with:
+   - Clear description of the problem
+   - Steps to reproduce
+   - Error messages (from browser console and Supabase logs)
+   - Your environment (Node version, OS, browser)
+
+---
+
+## Quick Checklist for New Setup
+
+Use this checklist when setting up the application for the first time:
+
+- [ ] Node.js 20+ installed
+- [ ] Repository cloned
+- [ ] Dependencies installed (`npm install`)
+- [ ] Supabase project created
+- [ ] `.env.local` file created with Supabase credentials
+- [ ] `profiles` table created in Supabase
+- [ ] RLS policies applied (migration file)
+- [ ] Policies verified in Supabase Dashboard
+- [ ] Development server started (`npm run dev`)
+- [ ] Can access http://localhost:3000
+- [ ] Can register a new officer
+- [ ] Can verify email and login
+- [ ] Can see dashboard after login
+
+If any step fails, refer to the relevant section in this guide.
