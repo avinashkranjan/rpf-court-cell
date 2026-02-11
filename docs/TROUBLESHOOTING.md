@@ -11,6 +11,51 @@ This guide helps resolve common issues with the RPF Court Cell application.
 
 ## Authentication Issues
 
+### Error: "No user or session returned from signup" / Profile table empty
+
+**Symptom:** 
+- User registration appears to succeed
+- User is created in Supabase `auth.users` table
+- But profile is NOT created in `profiles` table
+- Error message: "No user or session returned from signup"
+
+**Cause:** Email confirmation is enabled in Supabase. When email confirmation is required, `signUp()` returns a user but no session until the email is verified. Without a session, RLS policies prevent profile creation.
+
+**Solution (Recommended):** Use database trigger to auto-create profiles
+
+1. **Apply the trigger migration:**
+   - In Supabase SQL Editor, run `supabase/migrations/20260211_auto_create_profile_trigger.sql`
+   - This creates a database trigger that automatically creates profiles when users sign up
+
+2. **Verify the trigger:**
+   ```sql
+   SELECT trigger_name, event_manipulation, event_object_table 
+   FROM information_schema.triggers 
+   WHERE trigger_name = 'on_auth_user_created';
+   ```
+   Should return the trigger on `auth.users` table
+
+3. **Test registration:**
+   - Register a new officer
+   - Check `profiles` table - profile should be created immediately
+   - User will receive email verification link
+   - After verification, they can log in
+
+**How it works:**
+- The trigger runs when a new user is inserted into `auth.users`
+- It reads profile data from user metadata and creates the profile entry
+- Works with SECURITY DEFINER, bypassing RLS policies
+- Handles both self-registration and admin-created officers
+
+**Alternative (if trigger not preferred):**
+Disable email confirmation in Supabase:
+1. Go to Supabase Dashboard → Authentication → Providers
+2. Find Email provider → Settings
+3. Disable "Confirm email"
+4. Now `signUp()` will return a session immediately
+
+---
+
 ### Error: "new row violates row-level security policy for table 'profiles'"
 
 **Symptom:** When registering a new officer, you see an error in the browser console:
@@ -69,11 +114,8 @@ if (data.user && data.session) {
 - The RLS policy checks `auth.uid()` which is NULL without an active session
 - Explicitly setting the session ensures `auth.uid()` returns the user ID
 
-**Step 3: Verify the Fix**
-1. Update `context/auth-context.tsx` with the session handling code
-2. Restart your development server
-3. Try registering a new officer
-4. Should now succeed without RLS errors
+**Step 3: Use Database Trigger (Best Solution)**
+Apply the auto-create profile trigger to handle email confirmation scenarios. See "No user or session returned from signup" section above.
 
 ---
 

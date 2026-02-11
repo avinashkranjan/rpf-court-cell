@@ -1,6 +1,24 @@
 # Database Setup Guide
 
-## Issue: Officer Registration Fails with RLS Error
+## Common Issues
+
+### Issue 1: "No user or session returned from signup"
+
+**Error Message:**
+```
+No user or session returned from signup
+```
+
+**Symptoms:**
+- User is created in Supabase `auth.users` table
+- Profile is NOT created in `profiles` table
+- "No officers found" message in UI
+
+**Cause:** Email confirmation is enabled in Supabase. When email confirmation is required, `signUp()` doesn't return a session until the email is verified.
+
+**Solution:** Apply database trigger migration (recommended)
+
+### Issue 2: Officer Registration Fails with RLS Error
 
 **Error Message:**
 ```
@@ -10,20 +28,17 @@ Error creating profile:
 
 **Cause:** The `profiles` table has Row-Level Security (RLS) enabled but lacks proper policies to allow users to insert their profile during registration.
 
-## Solution: Apply RLS Policies
+## Complete Setup Steps
 
-### ⚠️ IMPORTANT: If You Already Ran the Migration
+### Step 1: Clean Up Existing Policies (if applicable)
 
-If you've already applied the migration but still see the error, you likely have **duplicate or conflicting policies**. Follow these steps:
-
-#### Step 1: Clean Up Existing Policies (Required if migration was already run)
+If you've already run migrations, clean up first:
 
 1. **Open Supabase Dashboard** → SQL Editor
-2. **Run the cleanup script first:**
-   - Open `supabase/migrations/cleanup_profiles_policies.sql`
-   - Copy and paste into SQL Editor
+2. **Run the cleanup script:**
+   - Copy `supabase/migrations/cleanup_profiles_policies.sql`
+   - Paste into SQL Editor
    - Click "Run"
-   - This removes all duplicate and conflicting policies
 
 3. **Verify cleanup:**
    ```sql
@@ -31,35 +46,14 @@ If you've already applied the migration but still see the error, you likely have
    ```
    Should return 0 rows after cleanup.
 
-#### Step 2: Apply the Updated Migration
+### Step 2: Apply RLS Policies Migration
 
 1. **Open SQL Editor** (new query)
-2. **Copy and paste** the contents of `supabase/migrations/20260211_fix_profiles_rls.sql`
+2. **Copy and paste** contents of `supabase/migrations/20260211_fix_profiles_rls.sql`
 3. **Click "Run"**
 4. Wait for "Success" message
 
-### Quick Fix for New Setup (5 minutes)
-
-If this is a fresh setup with no existing policies:
-
-1. **Log in to Supabase Dashboard**
-   - Go to [https://app.supabase.com](https://app.supabase.com)
-   - Select your RPF Court Cell project
-
-2. **Open SQL Editor**
-   - Click on "SQL Editor" in the left sidebar
-   - Click "New Query"
-
-3. **Copy and Paste the Migration**
-   - Open `supabase/migrations/20260211_fix_profiles_rls.sql`
-   - Copy the entire contents
-   - Paste into the SQL Editor
-
-4. **Execute the Migration**
-   - Click "Run" or press `Ctrl+Enter` (Windows/Linux) / `Cmd+Enter` (Mac)
-   - Wait for "Success. No rows returned" message
-
-5. **Verify the Fix**
+5. **Verify policies:**
    - Go to "Table Editor" → Select "profiles" table
    - Click the shield icon (🛡️) to see "Policies"
    - You should see exactly 4 policies:
@@ -67,6 +61,29 @@ If this is a fresh setup with no existing policies:
      - ✅ Enable read for own profile
      - ✅ Enable read for all authenticated users
      - ✅ Enable update for own profile
+
+### Step 3: Apply Database Trigger Migration (Critical!)
+
+**This step is required if email confirmation is enabled.**
+
+1. **Open SQL Editor** (new query)
+2. **Copy and paste** contents of `supabase/migrations/20260211_auto_create_profile_trigger.sql`
+3. **Click "Run"**
+4. Wait for "Success" message
+
+5. **Verify trigger:**
+   ```sql
+   SELECT trigger_name, event_manipulation, event_object_table 
+   FROM information_schema.triggers 
+   WHERE trigger_name = 'on_auth_user_created';
+   ```
+   Should return 1 row showing the trigger on `auth.users`
+
+**Why this is critical:**
+- When email confirmation is enabled, `signUp()` doesn't return a session
+- Without a session, RLS policies can't be used to create the profile
+- The database trigger runs with elevated privileges and creates the profile automatically
+- Works for both self-registration and admin-created officers
 
 ### What These Policies Do
 
