@@ -105,13 +105,37 @@ if (data.user && data.session) {
 **Solution:**
 Ensure this policy exists on the `profiles` table:
 ```sql
-CREATE POLICY "Authenticated users can read all profiles"
+CREATE POLICY "Enable read for all authenticated users"
 ON profiles
 FOR SELECT
-USING (auth.role() = 'authenticated');
+TO authenticated
+USING (true);
 ```
 
 This policy is included in the main RLS migration file.
+
+---
+
+### Admin creates officer but profile table is empty / "No officers found"
+
+**Symptom:** 
+- Admin successfully creates a new officer from the Officers page
+- User appears in Supabase `auth.users` table
+- But profile is not created in `profiles` table
+- Admin may be logged out or sees "No officers found"
+
+**Cause:** The `signUp()` function was overriding the admin's session with the newly created officer's session, causing the admin to be logged out.
+
+**Solution:**
+This has been fixed in the latest code (commit 46f47aa). The `signUp()` function now accepts an optional `autoSignIn` parameter:
+- `true` (default): For self-registration - sets the new user's session
+- `false`: For admin-created officers - preserves admin's session and restores it after profile creation
+
+**If you're still experiencing this issue:**
+1. Pull the latest code changes
+2. Restart your development server
+3. Try creating an officer again
+4. The officer should appear in the profiles table and the admin should remain logged in
 
 ---
 

@@ -6,10 +6,11 @@
 **Impact:** Officers cannot register new accounts
 
 ## Root Causes
-Two separate issues were causing this error:
+Three separate issues were identified and resolved:
 
 1. **Missing/Incorrect RLS Policies:** The `profiles` table had RLS enabled but lacked proper policies scoped to authenticated users
 2. **Session Timing Issue:** Even with correct policies, the session wasn't set in the client before profile insertion, causing `auth.uid()` to return NULL
+3. **Admin Session Override:** When admins created officers, the `signUp()` function would override the admin's session, logging them out and preventing profile creation
 
 ## Solution Implemented
 
@@ -25,7 +26,7 @@ Created `supabase/migrations/20260211_fix_profiles_rls.sql` with 4 RLS policies:
 
 **Key improvement:** All policies now include `TO authenticated` clause to properly scope them.
 
-### 2. Application Code Fix (Critical!)
+### 2. Application Code Fix - Session Handling (Critical!)
 Updated `context/auth-context.tsx` to explicitly set the session before profile insertion:
 
 ```typescript
@@ -47,6 +48,37 @@ if (data.user && data.session) {
 - RLS policies check `auth.uid()` which requires an active session
 - `signUp()` creates a user but doesn't immediately set the client session
 - Without explicitly setting it, `auth.uid()` returns NULL and the RLS check fails
+
+### 3. Admin Session Preservation (Critical!)
+Added `autoSignIn` parameter to `signUp()` function to prevent admin session override:
+
+```typescript
+// In context/auth-context.tsx
+const signUp = async (
+  email: string,
+  password: string,
+  profileData: Omit<Profile, 'id'>,
+  autoSignIn: boolean = true // New parameter
+) => {
+  // ... signup logic
+  
+  if (autoSignIn) {
+    // Self-registration: set new user's session
+    await supabase.auth.setSession({ ... });
+  } else {
+    // Admin creating officer: preserve admin session
+    const currentSession = await supabase.auth.getSession();
+    await supabase.auth.setSession({ ... }); // Temp set for insert
+    // Insert profile
+    await supabase.auth.setSession(currentSession); // Restore admin session
+  }
+}
+```
+
+**Why this is critical:**
+- When admins create officers from the Officers page, we don't want to log them out
+- The function now preserves the admin's session while temporarily using the new user's session for profile creation
+- Self-registration still works as before (autoSignIn defaults to true)
 
 ### 3. Cleanup Script
 Created `supabase/migrations/cleanup_profiles_policies.sql` to remove duplicate policies from multiple migration attempts.
