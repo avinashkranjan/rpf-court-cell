@@ -86,6 +86,43 @@ Error: new row violates row-level security policy for table "profiles"
 
 **Required**: ✅ This migration must be applied for officer registration to work properly.
 
+### 20260211_auto_create_profile_trigger.sql (NEW - Recommended)
+
+**Purpose**: Automatically creates profiles when users sign up, handling email confirmation scenarios.
+
+**Issue**: When email confirmation is enabled in Supabase, `signUp()` doesn't return a session until email is verified. This prevents profile creation using RLS policies.
+
+**What it does**:
+1. Creates a PostgreSQL function `handle_new_user()` that runs with elevated privileges
+2. Creates a database trigger that fires when a new user is added to `auth.users`
+3. Automatically creates a profile entry in the `profiles` table using data from user metadata
+4. Works regardless of whether email confirmation is enabled or disabled
+
+**Benefits**:
+- ✅ Handles email confirmation scenarios automatically
+- ✅ Profiles are created immediately when user signs up
+- ✅ No dependency on client-side session state
+- ✅ Works for both self-registration and admin-created officers
+- ✅ Reduces client-side code complexity
+
+**Usage**:
+```sql
+-- In Supabase SQL Editor, run this migration:
+-- (Copy and paste the entire file)
+```
+
+**Required**: ⚠️ **Highly Recommended** - Apply this migration if email confirmation is enabled or if you're experiencing "No user or session returned from signup" errors.
+
+**Order**: Apply after `20260211_fix_profiles_rls.sql`
+
+**Key Changes in Updated Version**:
+- ✅ Uses `TO authenticated` to properly scope policies to authenticated users
+- ✅ Cleaner policy names to avoid conflicts
+- ✅ Better handling of the signup edge case
+- ✅ Includes cleanup instructions for duplicate policies
+
+**Required**: ✅ This migration must be applied for officer registration to work properly.
+
 **Safe to run**: Yes, this migration is idempotent and safe to run multiple times.
 
 ## Migration Order

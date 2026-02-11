@@ -100,21 +100,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     autoSignIn: boolean = true
   ) => {
     // Step 1: Create the auth user in Supabase Auth
+    // Pass profile data in user metadata so the database trigger can create the profile
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: window.location.origin,
+        data: {
+          full_name: profileData.full_name,
+          designation: profileData.designation,
+          post_name: profileData.post_name,
+          railway_zone: profileData.railway_zone,
+          phone: profileData.phone,
+        },
       },
     });
 
     if (error) return { error };
-    if (!data.user || !data.session) return { error: new Error('No user or session returned from signup') };
+    if (!data.user) return { error: new Error('No user returned from signup') };
 
-    // Step 2: Create the user's profile in the profiles table
-    // IMPORTANT: The session from signUp must be established before the profile insert
-    // Otherwise, auth.uid() will be NULL in RLS policy checks and cause error 42501
-    
+    // Step 2: Handle profile creation based on whether email confirmation is enabled
+    // If no session is returned, email confirmation is enabled and profile will be created by trigger
+    if (!data.session) {
+      console.log('Email confirmation required. Profile will be created by database trigger.');
+      return { error: null };
+    }
+
+    // Step 3: If session exists, create profile directly (legacy support)
+    // This handles the case when email confirmation is disabled
     let currentSession = null;
     
     if (!autoSignIn) {
@@ -133,7 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       refresh_token: data.session.refresh_token,
     });
     
-    // Insert profile
+    // Insert profile (this may fail if trigger already created it, which is fine)
     const { error: profileError } = await supabase
       .from('profiles')
       .insert({
@@ -149,7 +162,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     }
     
-    if (profileError) {
+    // Ignore duplicate key errors (profile already created by trigger)
+    if (profileError && profileError.code !== '23505') {
       console.error('Error creating profile:', profileError);
       return { error: profileError as unknown as Error };
     }
