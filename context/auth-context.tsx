@@ -163,6 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     // Ignore duplicate key errors (profile already created by trigger)
+    // PostgreSQL error code 23505 = unique_violation (duplicate key)
     if (profileError && profileError.code !== '23505') {
       console.error('Error creating profile:', profileError);
       return { error: profileError as unknown as Error };

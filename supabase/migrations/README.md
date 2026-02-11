@@ -115,15 +115,7 @@ Error: new row violates row-level security policy for table "profiles"
 
 **Order**: Apply after `20260211_fix_profiles_rls.sql`
 
-**Key Changes in Updated Version**:
-- ✅ Uses `TO authenticated` to properly scope policies to authenticated users
-- ✅ Cleaner policy names to avoid conflicts
-- ✅ Better handling of the signup edge case
-- ✅ Includes cleanup instructions for duplicate policies
-
-**Required**: ✅ This migration must be applied for officer registration to work properly.
-
-**Safe to run**: Yes, this migration is idempotent and safe to run multiple times.
+**Safe to run**: Yes, the trigger can be created multiple times without issues (uses `CREATE OR REPLACE`).
 
 ## Migration Order
 
