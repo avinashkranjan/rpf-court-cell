@@ -106,10 +106,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) return { error };
 
     // Step 2: Create the user's profile in the profiles table
-    // NOTE: This requires proper Row-Level Security (RLS) policies on the profiles table.
-    // Without the correct RLS policies, this insert will fail with error code 42501.
-    // The required policies are defined in: supabase/migrations/20260211_fix_profiles_rls.sql
-    if (data.user) {
+    // IMPORTANT: The session from signUp must be established before the profile insert
+    // Otherwise, auth.uid() will be NULL in RLS policy checks and cause error 42501
+    if (data.user && data.session) {
+      // Set the session explicitly to ensure auth.uid() is available for RLS
+      await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      });
+
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({

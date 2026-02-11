@@ -84,6 +84,23 @@ The updated migration includes:
 - ✅ **Cleaner policy names** - Avoids conflicts with existing policies
 - ✅ **Proper scoping** - Uses `USING (true)` for read-all policy instead of `auth.role()` check
 - ✅ **Cleanup script** - Removes duplicate/conflicting policies before applying new ones
+- ✅ **Session handling fix** - Application code now explicitly sets the session before profile insertion
+
+### Application Code Fix
+
+The authentication code has been updated to explicitly set the session after signup and before profile insertion. This ensures `auth.uid()` is available for RLS policy checks:
+
+```typescript
+// In context/auth-context.tsx
+const { data, error } = await supabase.auth.signUp({ email, password });
+// NEW: Explicitly set session before profile insert
+await supabase.auth.setSession({
+  access_token: data.session.access_token,
+  refresh_token: data.session.refresh_token,
+});
+// Now profile insert works because auth.uid() is set
+await supabase.from('profiles').insert({ id: data.user.id, ...profileData });
+```
 
 ## Testing the Fix
 
@@ -121,7 +138,7 @@ In Supabase Dashboard → Table Editor → profiles:
 ### Issue: "policy already exists" error
 **Solution:** The migration has already been applied. This is safe - the policies are already in place.
 
-### Issue: Still getting RLS error after applying migration
+### Issue: Still getting RLS error after applying migration AND updating code
 **Troubleshooting steps:**
 1. Check if RLS is enabled:
    ```sql

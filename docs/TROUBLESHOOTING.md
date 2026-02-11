@@ -19,23 +19,61 @@ Error creating profile:
 {code: '42501', details: null, hint: null, message: 'new row violates row-level security policy for table "profiles"'}
 ```
 
-**Cause:** The Supabase `profiles` table has Row-Level Security (RLS) enabled but doesn't have the correct policies to allow user registration.
+**Causes:** This error can occur due to two different issues:
 
-**Solution:**
-1. Apply the RLS migration: `supabase/migrations/20260211_fix_profiles_rls.sql`
-2. Follow the detailed guide in [docs/DATABASE_SETUP.md](./DATABASE_SETUP.md)
-3. Quick steps:
-   - Open Supabase Dashboard → SQL Editor
-   - Copy and paste the migration file contents
-   - Click "Run"
-   - Verify 4 policies were created in Table Editor → profiles → Policies
+1. **Missing or incorrect RLS policies** on the profiles table
+2. **Session not established** before profile insertion (even with correct policies)
 
-**Verification:**
+**Solutions:**
+
+**Step 1: Verify RLS Policies are Correct**
 ```sql
--- Run this in Supabase SQL Editor to verify policies exist
-SELECT policyname, cmd FROM pg_policies WHERE tablename = 'profiles';
+-- Run this in Supabase SQL Editor
+SELECT policyname, cmd, roles 
+FROM pg_policies 
+WHERE tablename = 'profiles';
 ```
-Should return 4 policies: INSERT, SELECT (2x), UPDATE
+
+Should return exactly 4 policies, all with `roles = {authenticated}`:
+- Enable insert for authenticated users (INSERT)
+- Enable read for own profile (SELECT)
+- Enable read for all authenticated users (SELECT)
+- Enable update for own profile (UPDATE)
+
+If policies are missing or incorrect:
+1. Run cleanup: `supabase/migrations/cleanup_profiles_policies.sql`
+2. Apply migration: `supabase/migrations/20260211_fix_profiles_rls.sql`
+
+**Step 2: Ensure Application Code Sets Session** (Critical!)
+
+Even with correct RLS policies, the error can occur if the session isn't set before profile insertion. The application code must be updated to:
+
+```typescript
+// In context/auth-context.tsx - signUp function
+const { data, error } = await supabase.auth.signUp({ email, password });
+
+// CRITICAL: Set session explicitly before profile insert
+if (data.user && data.session) {
+  await supabase.auth.setSession({
+    access_token: data.session.access_token,
+    refresh_token: data.session.refresh_token,
+  });
+  
+  // Now profile insert will work
+  await supabase.from('profiles').insert({ id: data.user.id, ...profileData });
+}
+```
+
+**Why this is needed:**
+- `auth.signUp()` creates a user but doesn't immediately set the client session
+- The RLS policy checks `auth.uid()` which is NULL without an active session
+- Explicitly setting the session ensures `auth.uid()` returns the user ID
+
+**Step 3: Verify the Fix**
+1. Update `context/auth-context.tsx` with the session handling code
+2. Restart your development server
+3. Try registering a new officer
+4. Should now succeed without RLS errors
 
 ---
 
