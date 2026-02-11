@@ -227,7 +227,7 @@ export default function RegisterPage() {
                   />
                 </div>
 
-                <div className="md:col-span-2">
+                <div>
                   <Label htmlFor="confirmPassword">Confirm Password *</Label>
                   <Input
                     id="confirmPassword"
