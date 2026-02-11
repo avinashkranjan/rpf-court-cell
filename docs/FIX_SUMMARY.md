@@ -101,13 +101,9 @@ WHERE tablename = 'profiles';
 
 ### Step 3: Update Application Code (Critical!)
 
-Pull the latest code changes that include the session handling fix:
+Pull the latest code changes that include the session handling fix from this PR.
 
-```bash
-git pull origin copilot/fix-profile-row-security-issue
-```
-
-Or manually update `context/auth-context.tsx` with the session handling code (see commit ccb1857).
+Or manually update `context/auth-context.tsx` with the session handling code as shown in the "Application Code Fix" section above.
 
 ### Step 4: Restart Development Server
 
