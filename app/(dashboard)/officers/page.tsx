@@ -33,12 +33,12 @@ import {
 } from "@/components/ui/select";
 import { UserPlus, Search, Users, Edit, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/auth-context";
 
 interface Officer {
   id: string;
   full_name: string;
   designation: string;
-  belt_number: string | null;
   post_name: string;
   railway_zone: string;
   phone: string | null;
@@ -53,6 +53,7 @@ interface RailwayPost {
 
 const Officers: React.FC = () => {
   const { toast } = useToast();
+  const { signUp } = useAuth();
   const [officers, setOfficers] = useState<Officer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,10 +65,12 @@ const Officers: React.FC = () => {
   const [formData, setFormData] = useState({
     full_name: "",
     designation: "",
-    belt_number: "",
     post_name: "",
     railway_zone: "",
     phone: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const designations = [
@@ -136,7 +139,6 @@ const Officers: React.FC = () => {
           .update({
             full_name: formData.full_name,
             designation: formData.designation,
-            belt_number: formData.belt_number || null,
             post_name: formData.post_name,
             railway_zone: formData.railway_zone,
             phone: formData.phone || null,
@@ -150,12 +152,58 @@ const Officers: React.FC = () => {
           description: "Officer details have been updated successfully",
         });
       } else {
-        // For new officers, we need to create auth user first
-        // This is handled during registration, so show info
+        // Create new officer with credentials
+        if (!formData.email || !formData.password) {
+          toast({
+            title: "Validation Error",
+            description: "Email and password are required for new officers",
+            variant: "destructive",
+          });
+          setSaving(false);
+          return;
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+          toast({
+            title: "Password Mismatch",
+            description: "Passwords do not match",
+            variant: "destructive",
+          });
+          setSaving(false);
+          return;
+        }
+
+        if (formData.password.length < 6) {
+          toast({
+            title: "Weak Password",
+            description: "Password must be at least 6 characters",
+            variant: "destructive",
+          });
+          setSaving(false);
+          return;
+        }
+
+        const { error } = await signUp(formData.email, formData.password, {
+          full_name: formData.full_name,
+          designation: formData.designation,
+          post_name: formData.post_name,
+          railway_zone: formData.railway_zone,
+          phone: formData.phone || null,
+        });
+
+        if (error) {
+          toast({
+            title: "Registration Failed",
+            description: error.message,
+            variant: "destructive",
+          });
+          setSaving(false);
+          return;
+        }
+
         toast({
-          title: "Info",
-          description:
-            "New officers should register through the registration page to get login credentials.",
+          title: "Officer Registered",
+          description: "New officer has been registered successfully. They will receive a verification email.",
         });
       }
 
@@ -178,10 +226,12 @@ const Officers: React.FC = () => {
     setFormData({
       full_name: "",
       designation: "",
-      belt_number: "",
       post_name: "",
       railway_zone: "",
       phone: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
     });
     setEditingOfficer(null);
   };
@@ -191,10 +241,12 @@ const Officers: React.FC = () => {
     setFormData({
       full_name: officer.full_name,
       designation: officer.designation,
-      belt_number: officer.belt_number || "",
       post_name: officer.post_name,
       railway_zone: officer.railway_zone,
       phone: officer.phone || "",
+      email: "",
+      password: "",
+      confirmPassword: "",
     });
     setDialogOpen(true);
   };
@@ -203,7 +255,6 @@ const Officers: React.FC = () => {
     (o) =>
       o.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       o.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      o.belt_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       o.post_name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
@@ -233,12 +284,12 @@ const Officers: React.FC = () => {
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>
-                {editingOfficer ? "Edit Officer" : "Add New Officer"}
+                {editingOfficer ? "Edit Officer" : "Officer Registration"}
               </DialogTitle>
               <DialogDescription>
                 {editingOfficer
                   ? "Update officer details below"
-                  : "New officers should register via the registration page to get login credentials. Use this to edit existing officers."}
+                  : "Register a new officer with login credentials and profile information"}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -276,31 +327,63 @@ const Officers: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Belt Number</Label>
-                  <Input
-                    value={formData.belt_number}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        belt_number: e.target.value,
-                      })
-                    }
-                    placeholder="e.g., 12345"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Phone</Label>
-                  <Input
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                    placeholder="e.g., 9876543210"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label>Phone</Label>
+                <Input
+                  value={formData.phone}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
+                  placeholder="e.g., 9876543210"
+                />
               </div>
+
+              {!editingOfficer && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Email *</Label>
+                    <Input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      placeholder="officer.email@rpf.gov.in"
+                      required={!editingOfficer}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Password *</Label>
+                      <Input
+                        type="password"
+                        value={formData.password}
+                        onChange={(e) =>
+                          setFormData({ ...formData, password: e.target.value })
+                        }
+                        placeholder="At least 6 characters"
+                        required={!editingOfficer}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Confirm Password *</Label>
+                      <Input
+                        type="password"
+                        value={formData.confirmPassword}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            confirmPassword: e.target.value,
+                          })
+                        }
+                        placeholder="Re-enter password"
+                        required={!editingOfficer}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
 
               <div className="space-y-2">
                 <Label>Railway Post *</Label>
@@ -330,7 +413,7 @@ const Officers: React.FC = () => {
                 </Button>
                 <Button type="submit" disabled={saving}>
                   {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {editingOfficer ? "Update Officer" : "Add Officer"}
+                  {editingOfficer ? "Update Officer" : "Register Officer"}
                 </Button>
               </DialogFooter>
             </form>
@@ -344,7 +427,7 @@ const Officers: React.FC = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name, designation, belt number, or post..."
+              placeholder="Search by name, designation, or post..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -378,7 +461,6 @@ const Officers: React.FC = () => {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Designation</TableHead>
-                    <TableHead>Belt No.</TableHead>
                     <TableHead>Post</TableHead>
                     <TableHead>Phone</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -393,7 +475,6 @@ const Officers: React.FC = () => {
                       <TableCell>
                         <Badge variant="secondary">{officer.designation}</Badge>
                       </TableCell>
-                      <TableCell>{officer.belt_number || "-"}</TableCell>
                       <TableCell>{officer.post_name}</TableCell>
                       <TableCell>{officer.phone || "-"}</TableCell>
                       <TableCell className="text-right">

@@ -38,7 +38,6 @@ export default function RegisterPage() {
     confirmPassword: "",
     full_name: "",
     designation: "",
-    belt_number: "",
     post_name: "",
     railway_zone: "",
     phone: "",
@@ -70,7 +69,6 @@ export default function RegisterPage() {
       const { error } = await signUp(formData.email, formData.password, {
         full_name: formData.full_name,
         designation: formData.designation,
-        belt_number: formData.belt_number || null,
         post_name: formData.post_name,
         railway_zone: formData.railway_zone,
         phone: formData.phone || null,
@@ -163,18 +161,6 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="belt_number">Belt Number</Label>
-                  <Input
-                    id="belt_number"
-                    placeholder="e.g., RPF-12345"
-                    value={formData.belt_number}
-                    onChange={(e) =>
-                      setFormData({ ...formData, belt_number: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div>
                   <Label htmlFor="phone">Phone</Label>
                   <Input
                     id="phone"
@@ -241,7 +227,7 @@ export default function RegisterPage() {
                   />
                 </div>
 
-                <div className="md:col-span-2">
+                <div>
                   <Label htmlFor="confirmPassword">Confirm Password *</Label>
                   <Input
                     id="confirmPassword"
