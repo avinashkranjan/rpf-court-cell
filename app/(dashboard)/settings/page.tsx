@@ -29,6 +29,8 @@ import {
   Bell,
   Lock,
   Smartphone,
+  Pencil,
+  X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -53,6 +55,7 @@ const Settings: React.FC = () => {
   const { user, profile, refreshProfile } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
 
@@ -122,7 +125,7 @@ const Settings: React.FC = () => {
 
       await logActivity("profile_updated", "profile", user.id);
       await refreshProfile();
-
+      setIsEditing(false);
       toast({
         title: "Profile Updated",
         description: "Your profile has been saved successfully.",
@@ -139,22 +142,43 @@ const Settings: React.FC = () => {
     }
   };
 
+  const handleCancelEdit = () => {
+    // Reset form data to profile values
+    if (profile) {
+      setFormData({
+        full_name: profile.full_name || "",
+        designation: profile.designation || "",
+        post_name: profile.post_name || "",
+        railway_zone: profile.railway_zone || "",
+        phone: profile.phone || "",
+      });
+    }
+    setIsEditing(false);
+  };
+
   const getActionBadgeVariant = (action: string) => {
-    if (action.includes("completed") || action.includes("generated")) {
+    if (action.includes("completed") || action.includes("generated"))
       return "default";
-    }
-    if (action.includes("created") || action.includes("added")) {
+    if (action.includes("created") || action.includes("added"))
       return "secondary";
-    }
-    if (action.includes("login")) {
-      return "outline";
-    }
+    if (action.includes("login")) return "outline";
     return "secondary";
   };
 
+  const profileFields = [
+    { label: "Full Name", key: "full_name", value: formData.full_name },
+    { label: "Designation", key: "designation", value: formData.designation },
+    { label: "Post Name", key: "post_name", value: formData.post_name },
+    {
+      label: "Railway Zone",
+      key: "railway_zone",
+      value: formData.railway_zone,
+    },
+    { label: "Phone Number", key: "phone", value: formData.phone },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-muted-foreground">
@@ -163,7 +187,7 @@ const Settings: React.FC = () => {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 lg:w-100">
+        <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             <span className="hidden sm:inline">Profile</span>
@@ -181,87 +205,119 @@ const Settings: React.FC = () => {
         {/* Profile Tab */}
         <TabsContent value="profile" className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Personal Information
-              </CardTitle>
-              <CardDescription>
-                Update your personal details and contact information
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Personal Information
+                </CardTitle>
+                <CardDescription>
+                  {isEditing
+                    ? "Edit your personal details"
+                    : "Your personal details and contact information"}
+                </CardDescription>
+              </div>
+              {!isEditing && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSaveProfile} className="space-y-6">
+              {isEditing ? (
+                <form onSubmit={handleSaveProfile} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="full_name">Full Name</Label>
+                      <Input
+                        id="full_name"
+                        value={formData.full_name}
+                        onChange={(e) =>
+                          handleChange("full_name", e.target.value)
+                        }
+                        placeholder="Enter your full name"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="designation">Designation</Label>
+                      <Input
+                        id="designation"
+                        value={formData.designation}
+                        onChange={(e) =>
+                          handleChange("designation", e.target.value)
+                        }
+                        placeholder="e.g., SI, ASI, HC"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input
+                        id="phone"
+                        value={formData.phone}
+                        onChange={(e) => handleChange("phone", e.target.value)}
+                        placeholder="e.g., 9876543210"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="post_name">Post Name</Label>
+                      <Input
+                        id="post_name"
+                        value={formData.post_name}
+                        onChange={(e) =>
+                          handleChange("post_name", e.target.value)
+                        }
+                        placeholder="Your post name"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="railway_zone">Railway Zone</Label>
+                      <Input
+                        id="railway_zone"
+                        value={formData.railway_zone}
+                        onChange={(e) =>
+                          handleChange("railway_zone", e.target.value)
+                        }
+                        placeholder="e.g., Eastern Railway"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleCancelEdit}
+                    >
+                      <X className="mr-2 h-4 w-4" /> Cancel
+                    </Button>
+                    <Button type="submit" disabled={loading}>
+                      {loading && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      <Save className="mr-2 h-4 w-4" /> Save Changes
+                    </Button>
+                  </div>
+                </form>
+              ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="full_name">Full Name</Label>
-                    <Input
-                      id="full_name"
-                      value={formData.full_name}
-                      onChange={(e) =>
-                        handleChange("full_name", e.target.value)
-                      }
-                      placeholder="Enter your full name"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="designation">Designation</Label>
-                    <Input
-                      id="designation"
-                      value={formData.designation}
-                      onChange={(e) =>
-                        handleChange("designation", e.target.value)
-                      }
-                      placeholder="e.g., SI, ASI, HC"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => handleChange("phone", e.target.value)}
-                      placeholder="e.g., 9876543210"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="post_name">Post Name</Label>
-                    <Input
-                      id="post_name"
-                      value={formData.post_name}
-                      onChange={(e) =>
-                        handleChange("post_name", e.target.value)
-                      }
-                      placeholder="Your post name"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="railway_zone">Railway Zone</Label>
-                    <Input
-                      id="railway_zone"
-                      value={formData.railway_zone}
-                      onChange={(e) =>
-                        handleChange("railway_zone", e.target.value)
-                      }
-                      placeholder="e.g., Eastern Railway"
-                      required
-                    />
-                  </div>
+                  {profileFields.map((field) => (
+                    <div key={field.key} className="space-y-1">
+                      <p className="text-sm text-muted-foreground">
+                        {field.label}
+                      </p>
+                      <p className="font-medium">{field.value || "—"}</p>
+                    </div>
+                  ))}
                 </div>
-
-                <div className="flex justify-end">
-                  <Button type="submit" disabled={loading}>
-                    {loading && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Changes
-                  </Button>
-                </div>
-              </form>
+              )}
             </CardContent>
           </Card>
 
@@ -287,11 +343,9 @@ const Settings: React.FC = () => {
                   </div>
                 </div>
                 <Badge variant="outline" className="flex items-center gap-1">
-                  <CheckCircle className="h-3 w-3" />
-                  Verified
+                  <CheckCircle className="h-3 w-3" /> Verified
                 </Badge>
               </div>
-
               <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-full bg-primary/10">
@@ -318,8 +372,7 @@ const Settings: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                Security Settings
+                <Lock className="h-5 w-5" /> Security Settings
               </CardTitle>
               <CardDescription>
                 Manage your password and security preferences
@@ -342,7 +395,6 @@ const Settings: React.FC = () => {
                   Change Password
                 </Button>
               </div>
-
               <div className="flex items-center justify-between p-4 rounded-lg border">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-full bg-muted">
@@ -357,7 +409,6 @@ const Settings: React.FC = () => {
                 </div>
                 <Badge variant="secondary">Coming Soon</Badge>
               </div>
-
               <div className="flex items-center justify-between p-4 rounded-lg border">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-full bg-muted">
@@ -374,12 +425,10 @@ const Settings: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-
           <Card className="border-destructive/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-destructive">
-                <AlertCircle className="h-5 w-5" />
-                Danger Zone
+                <AlertCircle className="h-5 w-5" /> Danger Zone
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -403,8 +452,7 @@ const Settings: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Activity Log
+                <Activity className="h-5 w-5" /> Activity Log
               </CardTitle>
               <CardDescription>
                 Recent actions and changes in your account
@@ -426,12 +474,12 @@ const Settings: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                <ScrollArea className="h-125 pr-4">
+                <ScrollArea className="h-[500px] pr-4">
                   <div className="space-y-4">
                     {activityLogs.map((log, index) => (
                       <React.Fragment key={log.id}>
                         <div className="flex items-start gap-4">
-                          <div className="shrink-0 w-10 h-10 rounded-full bg-muted flex items-center justify-center text-lg">
+                          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-muted flex items-center justify-center text-lg">
                             {getEntityIcon(log.entity_type)}
                           </div>
                           <div className="flex-1 min-w-0">

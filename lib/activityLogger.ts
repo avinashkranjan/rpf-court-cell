@@ -35,6 +35,7 @@ export const logActivity = async (
   action: ActivityAction,
   entityType: EntityType,
   entityId?: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: Record<string, any>,
 ) => {
   try {
