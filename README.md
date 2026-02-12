@@ -79,6 +79,20 @@ See detailed instructions in [supabase/migrations/README.md](./supabase/migratio
 Error: new row violates row-level security policy for table "profiles"
 ```
 
+### Database Migration (Lovable Supabase → Self-Hosted Supabase)
+
+If you need to migrate your database from Lovable Supabase to a self-hosted Supabase instance, we provide comprehensive migration tooling:
+
+📦 **[Complete Migration Package](./supabase/migration-tools/)** includes:
+- ✅ Schema migration scripts (creates all tables, functions, triggers, RLS)
+- ✅ Data export/import scripts (handles all data with proper ordering)
+- ✅ Storage migration helper (for file uploads)
+- ✅ Verification scripts (validates migration integrity)
+- ✅ Comprehensive documentation (step-by-step guides)
+
+**Quick Start**: See [supabase/migration-tools/QUICK_START.md](./supabase/migration-tools/QUICK_START.md)
+**Full Guide**: See [supabase/migration-tools/README.md](./supabase/migration-tools/README.md)
+
 ### Environment Setup
 
 Create a `.env.local` file in the root directory with your Supabase credentials:
